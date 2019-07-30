@@ -1,4 +1,4 @@
-from gensys import gensys
+from lindsge import gensys
 import numpy as np
 
 g0 = np.array([[   1, 0, 0, 0],

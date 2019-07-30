@@ -5,7 +5,18 @@ https://dge.repec.org/codes/sims/linre3a/
 
 from scipy.linalg import qz
 from numpy.linalg import svd, inv
-from numpy import diagonal, vstack, array, eye, where, diag, sqrt, hstack, zeros, arange
+from numpy import diagonal, vstack, array, eye, where, diag, sqrt, hstack, \
+    zeros, arange
+
+
+class DSGE(object):
+
+    def __init__(self, gamma0, gamma1, c, psi, pi):
+        self.g0 = gamma0
+        self.g1 = gamma1
+        self.c_in = c
+        self.psi = psi
+        self.pi = pi
 
 
 def gensys(g0, g1, c, psi, pi, div=None, realsmall=0.000001):

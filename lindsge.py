@@ -108,6 +108,7 @@ class DSGE(object):
         # TODO implement
         return 2, 2
 
+
 def gensys(g0, g1, c, psi, pi, div=None, realsmall=0.000001):
     """
     This code is a translation from matlab to python of Christopher Sim's 'gensys'.

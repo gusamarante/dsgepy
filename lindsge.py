@@ -1,25 +1,79 @@
-"""
-This code is a translation from matlab to python of Christopher Sim's 'gensys'.
-https://dge.repec.org/codes/sims/linre3a/
-"""
-
+import pandas as pd
+from sympy import simplify
 from scipy.linalg import qz
 from numpy.linalg import svd, inv
-from numpy import diagonal, vstack, array, eye, where, diag, sqrt, hstack, \
-    zeros, arange
+from pykalman import KalmanFilter
+from numpy import diagonal, vstack, array, eye, where, diag, sqrt, hstack, zeros, arange
 
 
 class DSGE(object):
 
-    def __init__(self, gamma0, gamma1, c, psi, pi):
-        self.g0 = gamma0
-        self.g1 = gamma1
-        self.c_in = c
-        self.psi = psi
-        self.pi = pi
+    # TODO Simulate based on given matrices
+    # TODO Compute Likelihood
+    # TODO Estimation
+    # TODO impulse response function
+    # TODO Forecast error variance
+    # TODO Series Forecast
+    # TODO Historical Decomposition
+
+    def __init__(self, endog, endogl, exog, expec, params, equations,
+                 subs_dict=None, obs_matrix=None, obs_offset=None):
+        self.endog = endog
+        self.endogl = endogl
+        self.exog = exog
+        self.expec = expec
+        self.params = params
+        self.equations = equations
+        self.obs_matrix = obs_matrix
+        self.obs_offset = obs_offset
+        self._has_solution = False
+        self._get_jacobians()
+
+        # If subs_dict is passed, generate the solution
+        if not (subs_dict is None):
+            self.Gamma0 = array(self.Gamma0.subs(subs_dict)).astype(float)
+            self.Gamma1 = array(self.Gamma1.subs(subs_dict)).astype(float)
+            self.Psi = array(self.Psi.subs(subs_dict)).astype(float)
+            self.Pi = array(self.Pi.subs(subs_dict)).astype(float)
+            self.C_in = array(self.C_in.subs(subs_dict)).astype(float)
+
+            self.G1, self.C_out, self.impact, self.fmat, self.fwt, self.ywt, self.gev, self.eu, self.loose = \
+                gensys(self.Gamma0, self.Gamma1, self.C_in, self.Psi, self.Pi)
+
+            self._has_solution = True
+
+    def _get_jacobians(self):
+        self.Gamma0 = self.equations.jacobian(self.endog)
+        self.Gamma1 = -self.equations.jacobian(self.endogl)
+        self.Psi = -self.equations.jacobian(self.exog)
+        self.Pi = -self.equations.jacobian(self.expec)
+        self.C_in = simplify(self.equations
+                             - self.Gamma0 @ self.endog
+                             + self.Gamma1 @ self.endogl
+                             + self.Psi @ self.exog
+                             + self.Pi @ self.expec)
+
+    def simulate(self, n_obs=100):
+
+        assert self._has_solution, "No solution was generated yet"
+
+        kf = KalmanFilter(self.G1, self.obs_matrix, self.impact @ self.impact.T, None, None, None)
+        simul_data = kf.sample(n_obs)
+
+        state_names = [str(s) for s in list(self.endog)]
+        obs_names = [f'obs {i+1}' for i in range(self.obs_matrix.shape[0])]
+
+        df_obs = pd.DataFrame(data=simul_data[1], columns=obs_names)
+        df_states = pd.DataFrame(data=simul_data[0], columns=state_names)
+
+        return df_obs, df_states
 
 
 def gensys(g0, g1, c, psi, pi, div=None, realsmall=0.000001):
+    """
+    This code is a translation from matlab to python of Christopher Sim's 'gensys'.
+    https://dge.repec.org/codes/sims/linre3a/
+    """
 
     # TODO Assert variable types
     unique = False
@@ -149,6 +203,10 @@ def gensys(g0, g1, c, psi, pi, div=None, realsmall=0.000001):
 
 
 def qzdiv(stake, A, B, Q, Z, v=None):
+    """
+    This code is a translation from matlab to python of Christopher Sim's 'qzdiv'.
+    https://dge.repec.org/codes/sims/linre3a/
+    """
 
     n = A.shape[0]
 
@@ -182,6 +240,10 @@ def qzdiv(stake, A, B, Q, Z, v=None):
 
 
 def qzswitch(i, A, B, Q, Z):
+    """
+    This code is a translation from matlab to python of Christopher Sim's 'qzswitch'.
+    https://dge.repec.org/codes/sims/linre3a/
+    """
 
     eps = 2.2204e-16
     realsmall = sqrt(eps)*10

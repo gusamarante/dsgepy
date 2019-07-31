@@ -24,5 +24,3 @@ pi = np.array([[1, 0],
                [0, 0]])
 
 G1, C, impact, fmat, fwt, ywt, gev, eu, loose = gensys(g0, g1, c, psi, pi)
-
-a = 1

@@ -8,8 +8,6 @@ from numpy import diagonal, vstack, array, eye, where, diag, sqrt, hstack, zeros
 
 class DSGE(object):
 
-    # TODO Simulate based on given matrices
-    # TODO Compute Likelihood
     # TODO Estimation
     # TODO impulse response function
     # TODO Forecast error variance
@@ -17,7 +15,11 @@ class DSGE(object):
     # TODO Historical Decomposition
 
     def __init__(self, endog, endogl, exog, expec, params, equations,
-                 subs_dict=None, obs_matrix=None, obs_offset=None):
+                 subs_dict=None, obs_matrix=None, obs_offset=None,
+                 prior_info=None, data=None, verbose=True):
+
+        # TODO assert prior info
+
         self.endog = endog
         self.endogl = endogl
         self.exog = exog
@@ -26,6 +28,7 @@ class DSGE(object):
         self.equations = equations
         self.obs_matrix = obs_matrix
         self.obs_offset = obs_offset
+        self.prior_info = prior_info
         self._has_solution = False
         self._get_jacobians()
 
@@ -42,17 +45,6 @@ class DSGE(object):
 
             self._has_solution = True
 
-    def _get_jacobians(self):
-        self.Gamma0 = self.equations.jacobian(self.endog)
-        self.Gamma1 = -self.equations.jacobian(self.endogl)
-        self.Psi = -self.equations.jacobian(self.exog)
-        self.Pi = -self.equations.jacobian(self.expec)
-        self.C_in = simplify(self.equations
-                             - self.Gamma0 @ self.endog
-                             + self.Gamma1 @ self.endogl
-                             + self.Psi @ self.exog
-                             + self.Pi @ self.expec)
-
     def simulate(self, n_obs=100):
 
         assert self._has_solution, "No solution was generated yet"
@@ -68,6 +60,53 @@ class DSGE(object):
 
         return df_obs, df_states
 
+    def _get_jacobians(self):
+        self.Gamma0 = self.equations.jacobian(self.endog)
+        self.Gamma1 = -self.equations.jacobian(self.endogl)
+        self.Psi = -self.equations.jacobian(self.exog)
+        self.Pi = -self.equations.jacobian(self.expec)
+        self.C_in = simplify(self.equations
+                             - self.Gamma0 @ self.endog
+                             + self.Gamma1 @ self.endogl
+                             + self.Psi @ self.exog
+                             + self.Pi @ self.expec)
+
+    def _calc_posteriori(self, theta):
+        P = self._calc_priori(theta)
+        L, Val = self._log_likelihood(theta)
+        f = P + L
+        return f
+
+    def _calc_priori(self, theta):
+        prior = self.prior_info
+
+        param_names = [str(s) for s in list(self.params)]
+
+        df_prior = pd.DataFrame(columns=['mean', 'std', 'pdf'],
+                                index=param_names)
+
+        for param in prior.keys():
+            a = prior[param]['param a']
+            b = prior[param]['param b']
+            dist = prior[param]['dist'].lower()
+
+            if dist == 'beta':
+                pass
+
+            elif dist == 'gamma':
+                pass
+
+            elif dist == 'invgamma':
+                pass
+
+            else:  # Normal
+                pass
+
+        return 2
+
+    def _log_likelihood(self, theta):
+        # TODO implement
+        return 2, 2
 
 def gensys(g0, g1, c, psi, pi, div=None, realsmall=0.000001):
     """

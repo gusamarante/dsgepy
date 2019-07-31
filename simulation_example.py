@@ -66,7 +66,22 @@ df_obs, df_states = dsge_simul.simulate(n_obs=50)
 df_obs.plot()
 plt.show()
 
-
 # =============================
 # ===== MODEL ESTIMATION  =====
 # =============================
+
+# priors
+# 'gamma'
+prior_dict = {tau:   {'dist': 'gamma', 'param a': 1, 'param b': 1},
+              beta:  {'dist': 'gamma', 'param a': 1, 'param b': 1},
+              kappa: {'dist': 'gamma', 'param a': 1, 'param b': 1},
+              psi1:  {'dist': 'gamma', 'param a': 1, 'param b': 1},
+              psi2:  {'dist': 'gamma', 'param a': 1, 'param b': 1},
+              rhor:  {'dist': 'gamma', 'param a': 1, 'param b': 1},
+              rhog:  {'dist': 'gamma', 'param a': 1, 'param b': 1},
+              rhoz:  {'dist': 'gamma', 'param a': 1, 'param b': 1},
+              sigr:  {'dist': 'gamma', 'param a': 1, 'param b': 1},
+              sigg:  {'dist': 'gamma', 'param a': 1, 'param b': 1},
+              sigz:  {'dist': 'gamma', 'param a': 1, 'param b': 1}}
+
+dsge = DSGE(endog, endogl, exog,expec, param, equations, prior_info=prior_dict)

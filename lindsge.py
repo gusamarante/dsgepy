@@ -1,9 +1,10 @@
 import pandas as pd
 from sympy import simplify
 from scipy.linalg import qz
-from numpy.linalg import svd, inv
 from pykalman import KalmanFilter
-from numpy import diagonal, vstack, array, eye, where, diag, sqrt, hstack, zeros, arange
+from numpy.linalg import svd, inv
+from scipy.optimize import minimize
+from numpy import diagonal, vstack, array, eye, where, diag, sqrt, hstack, zeros, arange, exp, log, inf, nan
 
 
 class DSGE(object):
@@ -14,11 +15,13 @@ class DSGE(object):
     # TODO Series Forecast
     # TODO Historical Decomposition
 
-    def __init__(self, endog, endogl, exog, expec, params, equations,
-                 subs_dict=None, obs_matrix=None, obs_offset=None,
-                 prior_info=None, data=None, verbose=True):
+    prior_info = None
 
-        # TODO assert prior info
+    def __init__(self, endog, endogl, exog, expec, params, equations, calib_dict=None,
+                 obs_matrix=None, obs_offset=None, prior_dict=None, obs_data=None, verbose=True):
+
+        # TODO assert prior info (inv gamma a>2)
+        # TODO mudar default verbose para False
 
         self.endog = endog
         self.endogl = endogl
@@ -28,27 +31,30 @@ class DSGE(object):
         self.equations = equations
         self.obs_matrix = obs_matrix
         self.obs_offset = obs_offset
-        self.prior_info = prior_info
+        self.prior_dict = prior_dict
+        self.data = obs_data
+        self.n_state = len(endog)
         self._has_solution = False
+        self.verbose = verbose
         self._get_jacobians()
 
         # If subs_dict is passed, generate the solution
-        if not (subs_dict is None):
-            self.Gamma0 = array(self.Gamma0.subs(subs_dict)).astype(float)
-            self.Gamma1 = array(self.Gamma1.subs(subs_dict)).astype(float)
-            self.Psi = array(self.Psi.subs(subs_dict)).astype(float)
-            self.Pi = array(self.Pi.subs(subs_dict)).astype(float)
-            self.C_in = array(self.C_in.subs(subs_dict)).astype(float)
+        if not (calib_dict is None):
+            self.Gamma0, self.Gamma1, self.Psi, self.Pi, self.C_in = \
+                self._eval_jacobians(calib_dict)
 
             self.G1, self.C_out, self.impact, self.fmat, self.fwt, self.ywt, self.gev, self.eu, self.loose = \
                 gensys(self.Gamma0, self.Gamma1, self.C_in, self.Psi, self.Pi)
 
             self._has_solution = True
+        else:
+            self.prior_info = self._get_prior_info()
 
     def simulate(self, n_obs=100):
 
         assert self._has_solution, "No solution was generated yet"
 
+        # TODO add observation covariance to allow for measurment errors
         kf = KalmanFilter(self.G1, self.obs_matrix, self.impact @ self.impact.T, None, None, None)
         simul_data = kf.sample(n_obs)
 
@@ -59,6 +65,23 @@ class DSGE(object):
         df_states = pd.DataFrame(data=simul_data[0], columns=state_names)
 
         return df_obs, df_states
+
+    def estimate(self):
+
+        def obj_func(theta_irr):
+            theta_irr = {k: v for k, v in zip(self.params, theta_irr)}
+            theta_res = self._irr2res(theta_irr)
+            return -1 * self._calc_posterior(theta_res)
+
+        theta_res0 = {k: v for k, v in zip(self.params, self.prior_info['mean'].values)}
+        theta_irr0 = self._res2irr(theta_res0)
+        theta_irr0 = array(list(theta_irr0.values()))
+
+        # TODO mudar 'disp' para false, checar convergencia
+        print(theta_irr0)
+        res = minimize(obj_func, theta_irr0, options={'disp': True})
+
+        return res
 
     def _get_jacobians(self):
         self.Gamma0 = self.equations.jacobian(self.endog)
@@ -71,42 +94,162 @@ class DSGE(object):
                              + self.Psi @ self.exog
                              + self.Pi @ self.expec)
 
-    def _calc_posteriori(self, theta):
-        P = self._calc_priori(theta)
-        L, Val = self._log_likelihood(theta)
+    def _calc_posterior(self, theta):
+        P = self._calc_prior(theta)
+        L = self._log_likelihood(theta)
         f = P + L
         return f
 
-    def _calc_priori(self, theta):
-        prior = self.prior_info
+    def _calc_prior(self, theta):
+        prior_dict = self.prior_dict
+        df_prior = self.prior_info
+        df_prior['pdf'] = nan
+
+        for param in prior_dict.keys():
+            a = prior_dict[param]['param a']
+            b = prior_dict[param]['param b']
+            dist = prior_dict[param]['dist'].lower()
+            theta_i = theta[param]
+
+            # since we are goig to take logs, the density function only needs the terms that depend on
+            # theta_i, this will help speed up the code a little and will not affect optimization output.
+            if dist == 'beta':
+                pdf_i = (theta_i**(a - 1)) * ((1 - theta_i)**(b - 1))
+
+            elif dist == 'gamma':
+                pdf_i = theta_i**(a - 1) * exp(-theta_i/b)
+
+            elif dist == 'invgamma':
+                pdf_i = (theta_i**(- a - 1)) * exp(-b/theta_i)
+
+            elif dist == 'uniform':
+                pdf_i = 1/(b - a)
+
+            else:  # Normal
+                pdf_i = exp(((theta_i - a)**2)/(2 * (b**2)))
+
+            df_prior.loc[str(param), 'pdf'] = pdf_i
+
+        df_prior['log pdf'] = log(df_prior['pdf'].astype(float))
+
+        P = df_prior['log pdf'].sum()
+
+        return P
+
+    def _log_likelihood(self, theta):
+        Gamma0, Gamma1, Psi, Pi, C_in = self._eval_jacobians(theta)
+
+        G1, C_out, impact, fmat, fwt, ywt, gev, eu, loose = gensys(Gamma0, Gamma1, C_in, Psi, Pi)
+
+        if eu[0] == 1 and eu[1] == 1:
+            # TODO add observation covariance and offsets to allow for measurment errors
+            kf = KalmanFilter(G1, self.obs_matrix, impact @ impact.T, None, C_out.reshape(self.n_state), None)
+            L = kf.loglikelihood(self.data)
+        else:
+            L = - inf
+
+        return L
+
+    def _eval_jacobians(self, theta):
+        Gamma0 = array(self.Gamma0.subs(theta)).astype(float)
+        Gamma1 = array(self.Gamma1.subs(theta)).astype(float)
+        Psi = array(self.Psi.subs(theta)).astype(float)
+        Pi = array(self.Pi.subs(theta)).astype(float)
+        C_in = array(self.C_in.subs(theta)).astype(float)
+
+        return Gamma0, Gamma1, Psi, Pi, C_in
+
+    def _get_prior_info(self):
+        # TODO add distribution column
+        prior_info = self.prior_dict
 
         param_names = [str(s) for s in list(self.params)]
 
-        df_prior = pd.DataFrame(columns=['mean', 'std', 'pdf'],
+        df_prior = pd.DataFrame(columns=['mean', 'std'],
                                 index=param_names)
 
-        for param in prior.keys():
-            a = prior[param]['param a']
-            b = prior[param]['param b']
-            dist = prior[param]['dist'].lower()
+        for param in prior_info.keys():
+            a = prior_info[param]['param a']
+            b = prior_info[param]['param b']
+            dist = prior_info[param]['dist'].lower()
 
             if dist == 'beta':
-                pass
+                mean_i = a / (a + b)
+                std_i = ((a * b) / (((a + b) ** 2) * (a + b + 1))) ** 0.5
 
             elif dist == 'gamma':
-                pass
+                mean_i = a * b
+                std_i = (a * (b ** 2)) ** 0.5
 
             elif dist == 'invgamma':
-                pass
+                mean_i = b / (a - 1)
+                std_i = ((b ** 2) / (((a - 1) ** 2) * (a - 2))) ** 0.5
+
+            elif dist == 'uniform':
+                mean_i = (a + b) / 2
+                std_i = (((b - a) ** 2) / 12) ** 0.5
 
             else:  # Normal
-                pass
+                mean_i = a
+                std_i = b
 
-        return 2
+            df_prior.loc[str(param)] = [mean_i, std_i]
 
-    def _log_likelihood(self, theta):
-        # TODO implement
-        return 2, 2
+        return df_prior
+
+    def _res2irr(self, theta_res):
+        prior_info = self.prior_dict
+        theta_irr = theta_res
+
+        for param in theta_res.keys():
+            a = prior_info[param]['param a']
+            b = prior_info[param]['param b']
+            dist = prior_info[param]['dist'].lower()
+            theta_i = theta_res[param]
+
+            if dist == 'beta':
+                theta_irr[param] = log(theta_i / (1 - theta_i))
+
+            elif dist == 'gamma':
+                theta_irr[param] = log(theta_i)
+
+            elif dist == 'invgamma':
+                theta_irr[param] = log(theta_i)
+
+            elif dist == 'uniform':
+                theta_irr[param] = log((theta_i - a) / (b - theta_i))
+
+            else:  # Normal
+                theta_irr[param] = theta_i
+
+        return theta_irr
+
+    def _irr2res(self, theta_irr):
+        prior_info = self.prior_dict
+        theta_res = theta_irr
+
+        for param in theta_irr.keys():
+            a = prior_info[param]['param a']
+            b = prior_info[param]['param b']
+            dist = prior_info[param]['dist'].lower()
+            lambda_i = theta_irr[param]
+
+            if dist == 'beta':
+                theta_res[param] = exp(lambda_i) / (1 + exp(lambda_i))
+
+            elif dist == 'gamma':
+                theta_res[param] = exp(lambda_i)
+
+            elif dist == 'invgamma':
+                theta_res[param] = exp(lambda_i)
+
+            elif dist == 'uniform':
+                theta_res[param] = (a + b * exp(lambda_i)) / (1 + exp(lambda_i))
+
+            else:  # Normal
+                theta_res[param] = lambda_i
+
+        return theta_res
 
 
 def gensys(g0, g1, c, psi, pi, div=None, realsmall=0.000001):

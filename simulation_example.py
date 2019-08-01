@@ -61,27 +61,30 @@ obs_matrix[2, 2] = 1
 
 dsge_simul = DSGE(endog, endogl, exog,expec, param, equations, subs_dict, obs_matrix)
 
-df_obs, df_states = dsge_simul.simulate(n_obs=50)
+df_obs, df_states = dsge_simul.simulate(n_obs=100)
 
-df_obs.plot()
-plt.show()
+# df_obs.plot()
+# plt.show()
 
 # =============================
 # ===== MODEL ESTIMATION  =====
 # =============================
 
 # priors
-# 'gamma'
-prior_dict = {tau:   {'dist': 'gamma', 'param a': 1, 'param b': 1},
-              beta:  {'dist': 'gamma', 'param a': 1, 'param b': 1},
-              kappa: {'dist': 'gamma', 'param a': 1, 'param b': 1},
-              psi1:  {'dist': 'gamma', 'param a': 1, 'param b': 1},
-              psi2:  {'dist': 'gamma', 'param a': 1, 'param b': 1},
-              rhor:  {'dist': 'gamma', 'param a': 1, 'param b': 1},
-              rhog:  {'dist': 'gamma', 'param a': 1, 'param b': 1},
-              rhoz:  {'dist': 'gamma', 'param a': 1, 'param b': 1},
-              sigr:  {'dist': 'gamma', 'param a': 1, 'param b': 1},
-              sigg:  {'dist': 'gamma', 'param a': 1, 'param b': 1},
-              sigz:  {'dist': 'gamma', 'param a': 1, 'param b': 1}}
+prior_dict = {tau:   {'dist': 'gamma',    'param a': 2,   'param b': 0.50},
+              beta:  {'dist': 'beta',     'param a': 10,  'param b': 0.10},
+              kappa: {'dist': 'gamma',    'param a': 5.2, 'param b': 0.25},
+              psi1:  {'dist': 'gamma',    'param a': 6,   'param b': 0.25},
+              psi2:  {'dist': 'gamma',    'param a': 2,   'param b': 0.25},
+              rhor:  {'dist': 'uniform',  'param a': 0,   'param b': 1.00},
+              rhog:  {'dist': 'uniform',  'param a': 0,   'param b': 1.00},
+              rhoz:  {'dist': 'uniform',  'param a': 0,   'param b': 1.00},
+              sigr:  {'dist': 'invgamma', 'param a': 4,   'param b': 0.12},
+              sigg:  {'dist': 'invgamma', 'param a': 4,   'param b': 0.12},
+              sigz:  {'dist': 'invgamma', 'param a': 4,   'param b': 0.12}}
 
-dsge = DSGE(endog, endogl, exog,expec, param, equations, prior_info=prior_dict)
+dsge = DSGE(endog, endogl, exog, expec, param, equations, prior_dict=prior_dict,
+            obs_matrix=obs_matrix, obs_data=df_obs)
+
+res = dsge.estimate()
+print(res.x)

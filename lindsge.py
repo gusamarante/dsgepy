@@ -18,7 +18,7 @@ class DSGE(object):
     prior_info = None
 
     def __init__(self, endog, endogl, exog, expec, params, equations, calib_dict=None,
-                 obs_matrix=None, obs_offset=None, prior_dict=None, obs_data=None, verbose=True):
+                 obs_matrix=None, obs_offset=None, prior_dict=None, obs_data=None, verbose=False):
 
         # TODO assert prior info (inv gamma a>2)
         # TODO mudar default verbose para False
@@ -80,8 +80,10 @@ class DSGE(object):
         # TODO mudar 'disp' para false, checar convergencia
         print(theta_irr0)
         res = minimize(obj_func, theta_irr0, options={'disp': True})
+        theta_mode_irr = {k: v for k, v in zip(self.params, res.x)}
+        theta_mode_res = self._irr2res(theta_mode_irr)
 
-        return res
+        return theta_mode_res
 
     def _get_jacobians(self):
         self.Gamma0 = self.equations.jacobian(self.endog)
@@ -360,7 +362,7 @@ def gensys(g0, g1, c, psi, pi, div=None, realsmall=0.000001):
     if unique:
         eu[1] = 1
     else:
-        print(f'Indeterminacy. {nloose} endogenous variables.')
+        print(f'Indeterminacy. Loose endogenous variables.')
 
     tmat = hstack((eye(n - nunstab), -(ueta @ (inv(deta) @ veta.T) @ veta1.T @ deta1 @ ueta1.T).T))
     G0 = vstack((tmat @ a, hstack((zeros((nunstab, n - nunstab)), eye(nunstab)))))

@@ -87,4 +87,4 @@ dsge = DSGE(endog, endogl, exog, expec, param, equations, prior_dict=prior_dict,
             obs_matrix=obs_matrix, obs_data=df_obs)
 
 res = dsge.estimate()
-print(res.x)
+print(res)

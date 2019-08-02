@@ -1,6 +1,7 @@
 from sympy import *
 from lindsge import DSGE
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 
 # ================================
@@ -61,7 +62,7 @@ obs_matrix[2, 2] = 1
 
 dsge_simul = DSGE(endog, endogl, exog,expec, param, equations, subs_dict, obs_matrix)
 
-df_obs, df_states = dsge_simul.simulate(n_obs=100)
+df_obs, df_states = dsge_simul.simulate(n_obs=200)
 
 # df_obs.plot()
 # plt.show()
@@ -73,9 +74,9 @@ df_obs, df_states = dsge_simul.simulate(n_obs=100)
 # priors
 prior_dict = {tau:   {'dist': 'gamma',    'param a': 2,   'param b': 0.50},
               beta:  {'dist': 'beta',     'param a': 10,  'param b': 0.10},
-              kappa: {'dist': 'gamma',    'param a': 5.2, 'param b': 0.25},
-              psi1:  {'dist': 'gamma',    'param a': 6,   'param b': 0.25},
-              psi2:  {'dist': 'gamma',    'param a': 2,   'param b': 0.25},
+              kappa: {'dist': 'uniform',  'param a': 0,   'param b': 1.00},
+              psi1:  {'dist': 'gamma',    'param a': 1.5, 'param b': 1.00},
+              psi2:  {'dist': 'gamma',    'param a': 0.5, 'param b': 1.00},
               rhor:  {'dist': 'uniform',  'param a': 0,   'param b': 1.00},
               rhog:  {'dist': 'uniform',  'param a': 0,   'param b': 1.00},
               rhoz:  {'dist': 'uniform',  'param a': 0,   'param b': 1.00},
@@ -86,5 +87,11 @@ prior_dict = {tau:   {'dist': 'gamma',    'param a': 2,   'param b': 0.50},
 dsge = DSGE(endog, endogl, exog, expec, param, equations, prior_dict=prior_dict,
             obs_matrix=obs_matrix, obs_data=df_obs)
 
-res = dsge.estimate()
-print(res)
+df_chains = pd.read_hdf(r'C:\Users\gamarante\Desktop\chains.h5', key='df')
+
+res, accepted = dsge.estimate(nsim=100, compute_mode=False, ck=0.02, head_start=df_chains)
+print(accepted)
+
+store = pd.HDFStore(r'C:\Users\gamarante\Desktop\chains.h5')
+store['df'] = res
+store.close()

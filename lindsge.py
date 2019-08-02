@@ -1,8 +1,10 @@
 import pandas as pd
+from tqdm import tqdm
 from sympy import simplify
 from scipy.linalg import qz
 from pykalman import KalmanFilter
 from numpy.linalg import svd, inv
+from numpy.random import multivariate_normal, rand
 from scipy.optimize import minimize
 from numpy import diagonal, vstack, array, eye, where, diag, sqrt, hstack, zeros, arange, exp, log, inf, nan
 
@@ -34,6 +36,7 @@ class DSGE(object):
         self.prior_dict = prior_dict
         self.data = obs_data
         self.n_state = len(endog)
+        self.n_param = len(params)
         self._has_solution = False
         self.verbose = verbose
         self._get_jacobians()
@@ -66,24 +69,70 @@ class DSGE(object):
 
         return df_obs, df_states
 
-    def estimate(self):
+    def estimate(self, nsim=1000, burnin=0, compute_mode=False, ck=0.2, head_start=None):
 
-        def obj_func(theta_irr):
-            theta_irr = {k: v for k, v in zip(self.params, theta_irr)}
-            theta_res = self._irr2res(theta_irr)
-            return -1 * self._calc_posterior(theta_res)
+        # TODO change default values for nsim and burnin
+        # TODO compute_mode and head_start cannot conflict (XOR assert)
 
-        theta_res0 = {k: v for k, v in zip(self.params, self.prior_info['mean'].values)}
-        theta_irr0 = self._res2irr(theta_res0)
-        theta_irr0 = array(list(theta_irr0.values()))
+        if compute_mode:
 
-        # TODO mudar 'disp' para false, checar convergencia
-        print(theta_irr0)
-        res = minimize(obj_func, theta_irr0, options={'disp': True})
-        theta_mode_irr = {k: v for k, v in zip(self.params, res.x)}
-        theta_mode_res = self._irr2res(theta_mode_irr)
+            def obj_func(theta_irr):
+                theta_irr = {k: v for k, v in zip(self.params, theta_irr)}
+                theta_res = self._irr2res(theta_irr)
+                return -1 * self._calc_posterior(theta_res)
 
-        return theta_mode_res
+            theta_res0 = {k: v for k, v in zip(self.params, self.prior_info['mean'].values)}
+            theta_irr0 = self._res2irr(theta_res0)
+            theta_irr0 = array(list(theta_irr0.values()))
+
+            # TODO mudar 'disp' para false, checar convergencia
+            res = minimize(obj_func, theta_irr0, options={'disp': True})
+            theta_mode_irr = {k: v for k, v in zip(self.params, res.x)}
+            theta_mode_res = self._irr2res(theta_mode_irr)
+            sigmak = ck * res.hess_inv
+
+            df_chains = pd.DataFrame(columns=[str(p) for p in list(self.params)], index=range(nsim + burnin))
+            df_chains.loc[0] = list(theta_mode_res.values())
+            start = 0
+
+        elif not (head_start is None):
+            # TODO assert that the columns are the same
+            # TODO send sigmak
+            df_chains = head_start
+            start = df_chains.index[-1]
+            sigmak = ck * eye(self.n_param)
+
+        else:
+            theta_mode_res = {k: v for k, v in zip(self.params, self.prior_info['mean'].values)}
+            sigmak = ck * eye(self.n_param)
+
+            df_chains = pd.DataFrame(columns=[str(p) for p in list(self.params)], index=range(nsim + burnin))
+            df_chains.loc[0] = list(theta_mode_res.values())
+            start = 1
+
+        # Metropolis-Hastings
+        muk = zeros(self.n_param)
+        accepted = 0
+
+        # TODO add support for HDF5 save and continuation
+        for ii in tqdm(range(start + 1, start+nsim+burnin), 'Metropolis-Hastings'):
+            theta1 = {k: v for k, v in zip(self.params, df_chains.loc[ii - 1].values)}
+            pos1 = self._calc_posterior(theta1)
+            omega1 = self._res2irr(theta1)
+            omega2 = array(list(omega1.values())) + multivariate_normal(muk, sigmak)
+            omega2 = {k: v for k, v in zip(self.params, omega2)}
+            theta2 = self._irr2res(omega2)
+            pos2 = self._calc_posterior(theta2)
+
+            ratio = exp(pos2 - pos1)
+
+            if ratio > rand(1)[0]:
+                accepted += 1
+                df_chains.loc[ii] = list(theta2.values())
+            else:
+                df_chains.loc[ii] = df_chains.loc[ii - 1]
+
+        return df_chains, accepted / (nsim + burnin)
 
     def _get_jacobians(self):
         self.Gamma0 = self.equations.jacobian(self.endog)
@@ -140,6 +189,10 @@ class DSGE(object):
 
     def _log_likelihood(self, theta):
         Gamma0, Gamma1, Psi, Pi, C_in = self._eval_jacobians(theta)
+
+        for mat in [Gamma0, Gamma1, Psi, Pi, C_in]:
+            if (mat == nan).any() or (mat == nan).any():
+                return -inf
 
         G1, C_out, impact, fmat, fwt, ywt, gev, eu, loose = gensys(Gamma0, Gamma1, C_in, Psi, Pi)
 
@@ -201,7 +254,7 @@ class DSGE(object):
 
     def _res2irr(self, theta_res):
         prior_info = self.prior_dict
-        theta_irr = theta_res
+        theta_irr = theta_res.copy()
 
         for param in theta_res.keys():
             a = prior_info[param]['param a']
@@ -228,7 +281,7 @@ class DSGE(object):
 
     def _irr2res(self, theta_irr):
         prior_info = self.prior_dict
-        theta_res = theta_irr
+        theta_res = theta_irr.copy()
 
         for param in theta_irr.keys():
             a = prior_info[param]['param a']
@@ -293,7 +346,7 @@ def gensys(g0, g1, c, psi, pi, div=None, realsmall=0.000001):
     gev = vstack([diagonal(a), diagonal(b)]).T
 
     if zxz:
-        print('Coincident zeros. Indeterminancy and/or nonexistence')
+        # print('Coincident zeros. Indeterminancy and/or nonexistence')
         eu = [-2, -2]
         return None, None, None, None, None, None, None, eu, None
 
@@ -362,7 +415,8 @@ def gensys(g0, g1, c, psi, pi, div=None, realsmall=0.000001):
     if unique:
         eu[1] = 1
     else:
-        print(f'Indeterminacy. Loose endogenous variables.')
+        # print(f'Indeterminacy. Loose endogenous variables.')
+        pass
 
     tmat = hstack((eye(n - nunstab), -(ueta @ (inv(deta) @ veta.T) @ veta1.T @ deta1 @ ueta1.T).T))
     G0 = vstack((tmat @ a, hstack((zeros((nunstab, n - nunstab)), eye(nunstab)))))

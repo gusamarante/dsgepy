@@ -4,8 +4,8 @@ from sympy import simplify
 from scipy.linalg import qz
 from pykalman import KalmanFilter
 from numpy.linalg import svd, inv
-from numpy.random import multivariate_normal, rand
 from scipy.optimize import minimize
+from numpy.random import multivariate_normal, rand
 from numpy import diagonal, vstack, array, eye, where, diag, sqrt, hstack, zeros, arange, exp, log, inf, nan
 
 

@@ -6,7 +6,9 @@ from pykalman import KalmanFilter
 from numpy.linalg import svd, inv
 from scipy.optimize import minimize
 from numpy.random import multivariate_normal, rand
-from numpy import diagonal, vstack, array, eye, where, diag, sqrt, hstack, zeros, arange, exp, log, inf, nan
+from numpy import diagonal, vstack, array, eye, where, diag, sqrt, hstack, zeros, \
+    arange, exp, log, inf, nan, isnan, isinf
+from time import time
 
 
 class DSGE(object):
@@ -20,9 +22,9 @@ class DSGE(object):
     prior_info = None
 
     def __init__(self, endog, endogl, exog, expec, params, equations, calib_dict=None,
-                 obs_matrix=None, obs_offset=None, prior_dict=None, obs_data=None, verbose=False):
+                 obs_matrix=None, obs_offset=None, prior_dict=None, obs_data=None, verbose=True):
 
-        # TODO assert prior info (inv gamma a>2)
+        # TODO assert prior info (inv gamma a!=2 and a!=1)
         # TODO mudar default verbose para False
 
         self.endog = endog
@@ -37,14 +39,15 @@ class DSGE(object):
         self.data = obs_data
         self.n_state = len(endog)
         self.n_param = len(params)
+        self.n_obs = obs_matrix.shape[0]
         self._has_solution = False
         self.verbose = verbose
         self._get_jacobians()
 
         # If subs_dict is passed, generate the solution
         if not (calib_dict is None):
-            self.Gamma0, self.Gamma1, self.Psi, self.Pi, self.C_in = \
-                self._eval_jacobians(calib_dict)
+            self.Gamma0, self.Gamma1, self.Psi, self.Pi, self.C_in, self.obs_matrix, self.obs_offset = \
+                self._eval_matrix(calib_dict)
 
             self.G1, self.C_out, self.impact, self.fmat, self.fwt, self.ywt, self.gev, self.eu, self.loose = \
                 gensys(self.Gamma0, self.Gamma1, self.C_in, self.Psi, self.Pi)
@@ -58,7 +61,8 @@ class DSGE(object):
         assert self._has_solution, "No solution was generated yet"
 
         # TODO add observation covariance to allow for measurment errors
-        kf = KalmanFilter(self.G1, self.obs_matrix, self.impact @ self.impact.T, None, None, None)
+        kf = KalmanFilter(self.G1, self.obs_matrix, self.impact @ self.impact.T, None,
+                          self.C_out.reshape(self.n_state), self.obs_offset.reshape(self.n_obs))
         simul_data = kf.sample(n_obs)
 
         state_names = [str(s) for s in list(self.endog)]
@@ -69,12 +73,12 @@ class DSGE(object):
 
         return df_obs, df_states
 
-    def estimate(self, nsim=1000, burnin=0, compute_mode=False, ck=0.2, head_start=None):
+    def estimate(self, nsim=1000, ck=0.2, head_start=None):
 
-        # TODO change default values for nsim and burnin
-        # TODO compute_mode and head_start cannot conflict (XOR assert)
+        # TODO try to read file. If fails, start new model
 
-        if compute_mode:
+        if head_start is None:
+            head_start = 'dsge output ' + pd.to_datetime('today').strftime('%Y-%m-%d-%H-%M') + '.h5'
 
             def obj_func(theta_irr):
                 theta_irr = {k: v for k, v in zip(self.params, theta_irr)}
@@ -85,37 +89,27 @@ class DSGE(object):
             theta_irr0 = self._res2irr(theta_res0)
             theta_irr0 = array(list(theta_irr0.values()))
 
-            # TODO mudar 'disp' para false, checar convergencia
-            res = minimize(obj_func, theta_irr0, options={'disp': True})
+            res = minimize(obj_func, theta_irr0, options={'disp': False})
             theta_mode_irr = {k: v for k, v in zip(self.params, res.x)}
             theta_mode_res = self._irr2res(theta_mode_irr)
             sigmak = ck * res.hess_inv
 
-            df_chains = pd.DataFrame(columns=[str(p) for p in list(self.params)], index=range(nsim + burnin))
+            df_chains = pd.DataFrame(columns=[str(p) for p in list(self.params)], index=range(nsim))
             df_chains.loc[0] = list(theta_mode_res.values())
             start = 0
 
-        elif not (head_start is None):
-            # TODO assert that the columns are the same
-            # TODO send sigmak
-            df_chains = head_start
-            start = df_chains.index[-1]
-            sigmak = ck * eye(self.n_param)
-
         else:
-            theta_mode_res = {k: v for k, v in zip(self.params, self.prior_info['mean'].values)}
-            sigmak = ck * eye(self.n_param)
-
-            df_chains = pd.DataFrame(columns=[str(p) for p in list(self.params)], index=range(nsim + burnin))
-            df_chains.loc[0] = list(theta_mode_res.values())
-            start = 1
+            # TODO check components
+            df_chains = pd.read_hdf(head_start, key='chains')
+            sigmak = pd.read_hdf(head_start, key='sigmak')
+            start = df_chains.index[-1]
 
         # Metropolis-Hastings
         muk = zeros(self.n_param)
         accepted = 0
 
         # TODO add support for HDF5 save and continuation
-        for ii in tqdm(range(start + 1, start+nsim+burnin), 'Metropolis-Hastings'):
+        for ii in tqdm(range(start + 1, start+nsim), 'Metropolis-Hastings'):
             theta1 = {k: v for k, v in zip(self.params, df_chains.loc[ii - 1].values)}
             pos1 = self._calc_posterior(theta1)
             omega1 = self._res2irr(theta1)
@@ -132,7 +126,18 @@ class DSGE(object):
             else:
                 df_chains.loc[ii] = df_chains.loc[ii - 1]
 
-        return df_chains, accepted / (nsim + burnin)
+            if ii % 100 == 0:
+                store = pd.HDFStore(head_start)
+                store['chains'] = df_chains
+                store['sigmak'] = pd.DataFrame(data=sigmak)
+                store.close()
+
+        store = pd.HDFStore(head_start)
+        store['chains'] = df_chains
+        store['sigmak'] = pd.DataFrame(data=sigmak)
+        store.close()
+
+        return df_chains, accepted / nsim
 
     def _get_jacobians(self):
         self.Gamma0 = self.equations.jacobian(self.endog)
@@ -188,31 +193,38 @@ class DSGE(object):
         return P
 
     def _log_likelihood(self, theta):
-        Gamma0, Gamma1, Psi, Pi, C_in = self._eval_jacobians(theta)
+        Gamma0, Gamma1, Psi, Pi, C_in, obs_matrix, obs_offset = self._eval_matrix(theta)
 
         for mat in [Gamma0, Gamma1, Psi, Pi, C_in]:
-            if (mat == nan).any() or (mat == nan).any():
+            if isnan(mat).any() or isinf(mat).any():
                 return -inf
 
         G1, C_out, impact, fmat, fwt, ywt, gev, eu, loose = gensys(Gamma0, Gamma1, C_in, Psi, Pi)
 
         if eu[0] == 1 and eu[1] == 1:
-            # TODO add observation covariance and offsets to allow for measurment errors
-            kf = KalmanFilter(G1, self.obs_matrix, impact @ impact.T, None, C_out.reshape(self.n_state), None)
+            # TODO add observation covariance to allow for measurment errors
+            kf = KalmanFilter(G1, obs_matrix, impact @ impact.T, None, C_out.reshape(self.n_state),
+                              obs_offset.reshape(self.n_obs))
             L = kf.loglikelihood(self.data)
         else:
             L = - inf
 
         return L
 
-    def _eval_jacobians(self, theta):
+    def _eval_matrix(self, theta):
+
+        # state matrices
         Gamma0 = array(self.Gamma0.subs(theta)).astype(float)
         Gamma1 = array(self.Gamma1.subs(theta)).astype(float)
         Psi = array(self.Psi.subs(theta)).astype(float)
         Pi = array(self.Pi.subs(theta)).astype(float)
         C_in = array(self.C_in.subs(theta)).astype(float)
 
-        return Gamma0, Gamma1, Psi, Pi, C_in
+        # observation matrices
+        obs_matrix = array(self.obs_matrix.subs(theta)).astype(float)
+        obs_offset = array(self.obs_offset.subs(theta)).astype(float)
+
+        return Gamma0, Gamma1, Psi, Pi, C_in, obs_matrix, obs_offset
 
     def _get_prior_info(self):
         # TODO add distribution column
@@ -534,3 +546,8 @@ def qzswitch(i, A, B, Q, Z):
     Q[i:i + 2, :] = xy @ Q[i:i + 2, :]
 
     return A, B, Q, Z
+
+
+def EvaluateMHChains():
+    # TODO implement
+    pass

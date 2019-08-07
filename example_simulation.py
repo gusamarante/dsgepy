@@ -48,19 +48,23 @@ subs_dict = {tau: 1.2,
              kappa: 0.3,
              psi1: 1.5,
              psi2: 0.5,
-             rhor: 0.8,
+             rhor: 0.90,
              rhog: 0.3,
              rhoz: 0.6,
-             sigr: 0.01,
+             sigr: 0.1,
              sigg: 0.02,
              sigz: 0.03}
 
-obs_matrix = np.zeros((3, 7))
+obs_matrix = Matrix(np.zeros((3, 7)))
 obs_matrix[0, 0] = 1
 obs_matrix[1, 1] = 1
 obs_matrix[2, 2] = 1
 
-dsge_simul = DSGE(endog, endogl, exog,expec, param, equations, subs_dict, obs_matrix)
+obs_offset = Matrix(np.zeros(3))
+obs_offset[1] = 3
+obs_offset[2] = 4*(1/beta - 1)*100
+
+dsge_simul = DSGE(endog, endogl, exog,expec, param, equations, subs_dict, obs_matrix, obs_offset)
 
 df_obs, df_states = dsge_simul.simulate(n_obs=200)
 
@@ -76,7 +80,7 @@ prior_dict = {tau:   {'dist': 'gamma',    'param a': 2,   'param b': 0.50},
               beta:  {'dist': 'beta',     'param a': 10,  'param b': 0.10},
               kappa: {'dist': 'uniform',  'param a': 0,   'param b': 1.00},
               psi1:  {'dist': 'gamma',    'param a': 1.5, 'param b': 1.00},
-              psi2:  {'dist': 'gamma',    'param a': 0.5, 'param b': 1.00},
+              psi2:  {'dist': 'gamma',    'param a': 0.8, 'param b': 1.00},
               rhor:  {'dist': 'uniform',  'param a': 0,   'param b': 1.00},
               rhog:  {'dist': 'uniform',  'param a': 0,   'param b': 1.00},
               rhoz:  {'dist': 'uniform',  'param a': 0,   'param b': 1.00},
@@ -85,13 +89,16 @@ prior_dict = {tau:   {'dist': 'gamma',    'param a': 2,   'param b': 0.50},
               sigz:  {'dist': 'invgamma', 'param a': 4,   'param b': 0.12}}
 
 dsge = DSGE(endog, endogl, exog, expec, param, equations, prior_dict=prior_dict,
-            obs_matrix=obs_matrix, obs_data=df_obs)
+            obs_matrix=obs_matrix, obs_data=df_obs, obs_offset=obs_offset)
 
-df_chains = pd.read_hdf(r'C:\Users\gamarante\Desktop\chains.h5', key='df')
-
-res, accepted = dsge.estimate(nsim=100, compute_mode=False, ck=0.02, head_start=df_chains)
+df_chains, accepted = dsge.estimate(nsim=200, ck=0.01, head_start='example3.h5')
 print(accepted)
+df_chains.plot()
+plt.show()
 
-store = pd.HDFStore(r'C:\Users\gamarante\Desktop\chains.h5')
-store['df'] = res
-store.close()
+df_chains.astype(float).hist()
+plt.show()
+
+# store = pd.HDFStore(r'C:\Users\gamarante\Desktop\chains.h5')
+# store['df'] = df_chains
+# store.close()

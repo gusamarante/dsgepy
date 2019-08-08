@@ -7,8 +7,9 @@ from numpy.linalg import svd, inv
 from scipy.optimize import minimize
 from numpy.random import multivariate_normal, rand
 from numpy import diagonal, vstack, array, eye, where, diag, sqrt, hstack, zeros, \
-    arange, exp, log, inf, nan, isnan, isinf
-from time import time
+    arange, exp, log, inf, nan, isnan, isinf, set_printoptions
+
+set_printoptions(precision=4, suppress=True)
 
 
 class DSGE(object):
@@ -18,6 +19,7 @@ class DSGE(object):
     # TODO Forecast error variance
     # TODO Series Forecast
     # TODO Historical Decomposition
+    # TODO Model Identification (Iskrev's paper)
 
     prior_info = None
 
@@ -548,6 +550,8 @@ def qzswitch(i, A, B, Q, Z):
     return A, B, Q, Z
 
 
-def EvaluateMHChains():
-    # TODO implement
+def EvaluateChains():
+    # TODO Prior Density VS Posterior histogram
+    # TODO Table with mean and std from priors and poteriors
+    # TODO Output a model calibrated with posteriors
     pass

@@ -1,5 +1,5 @@
 from sympy import *
-from lindsge import DSGE
+from pydsge import DSGE
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -64,8 +64,8 @@ obs_offset = Matrix(np.zeros(3))
 obs_offset[1] = 3
 obs_offset[2] = 4*(1/beta - 1)*100
 
-dsge_simul = DSGE(endog, endogl, exog,expec, param, equations, subs_dict, obs_matrix, obs_offset)
-
+dsge_simul = DSGE(endog, endogl, exog, expec, param, equations, subs_dict, obs_matrix, obs_offset)
+print(dsge_simul.eu)
 df_obs, df_states = dsge_simul.simulate(n_obs=200)
 
 # df_obs.plot()
@@ -91,7 +91,7 @@ prior_dict = {tau:   {'dist': 'gamma',    'param a': 2,   'param b': 0.50},
 dsge = DSGE(endog, endogl, exog, expec, param, equations, prior_dict=prior_dict,
             obs_matrix=obs_matrix, obs_data=df_obs, obs_offset=obs_offset)
 
-df_chains, accepted = dsge.estimate(nsim=200, ck=0.01, head_start='example3.h5')
+df_chains, accepted = dsge.estimate(nsim=100000, ck=0.01, head_start='example.h5')
 print(accepted)
 df_chains.plot()
 plt.show()

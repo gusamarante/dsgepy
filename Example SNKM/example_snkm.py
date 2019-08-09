@@ -42,8 +42,8 @@ rho = (1/beta) - 1
 eq1 = y - exp_y + (1/sigma)*(i - exp_pi - psi * rho_a * a)
 eq2 = pi - beta * exp_pi - kappa * y
 eq3 = i - phi_pi * pi - phi_y * y - v
-eq4 = a - rho_a * al - eps_a
-eq5 = v - rho_v * vl - eps_v
+eq4 = a - rho_a * al - sigma_a * eps_a
+eq5 = v - rho_v * vl - sigma_v * eps_v
 eq6 = y - exp_yl - eta_y
 eq7 = pi - exp_pil - eta_pi
 
@@ -76,10 +76,10 @@ obs_offset[0] = rho
 dsge_simul = DSGE(endog, endogl, exog, expec, param, equations, calib_dict, obs_matrix, obs_offset)
 print(dsge_simul.eu)
 
-df_obs, df_states = dsge_simul.simulate(n_obs=100)
+df_obs, df_states = dsge_simul.simulate(n_obs=150)
 
-# df_obs.plot()
-# plt.show()
+df_states.plot()
+plt.show()
 
 
 # =============================
@@ -93,15 +93,15 @@ prior_dict = {sigma:   {'dist': 'gamma',    'param a': 4,    'param b': 0.25},
               kappa:   {'dist': 'uniform',  'param a': 0,    'param b': 1.00},
               phi_pi:  {'dist': 'gamma',    'param a': 1.5,  'param b': 1.00},
               phi_y:   {'dist': 'gamma',    'param a': 0.25, 'param b': 0.50},
-              rho_a:   {'dist': 'uniform',  'param a': 0,    'param b': 1.00},
+              rho_a:   {'dist': 'beta',     'param a': 2,    'param b': 2.00},
               sigma_a: {'dist': 'invgamma', 'param a': 6,    'param b': 5.00},
-              rho_v:   {'dist': 'uniform',  'param a': 0,    'param b': 1.00},
+              rho_v:   {'dist': 'beta',     'param a': 2,    'param b': 2.00},
               sigma_v: {'dist': 'invgamma', 'param a': 2.5,  'param b': 1.50}}
 
 dsge = DSGE(endog, endogl, exog, expec, param, equations, prior_dict=prior_dict,
             obs_matrix=obs_matrix, obs_data=df_obs, obs_offset=obs_offset)
 
-df_chains, accepted = dsge.estimate(nsim=100, ck=0.01, head_start='snkm.h5')
+df_chains, accepted = dsge.estimate(nsim=500, ck=0.01, file_path='snkm.h5')
 print(accepted)
 df_chains.plot()
 plt.show()

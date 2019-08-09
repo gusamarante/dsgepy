@@ -7,9 +7,9 @@ from numpy.linalg import svd, inv
 from scipy.optimize import minimize
 from numpy.random import multivariate_normal, rand
 from numpy import diagonal, vstack, array, eye, where, diag, sqrt, hstack, zeros, \
-    arange, exp, log, inf, nan, isnan, isinf, set_printoptions
+    arange, exp, log, inf, nan, isnan, isinf, set_printoptions, matrix
 
-set_printoptions(precision=4, suppress=True)
+set_printoptions(precision=4, suppress=True, linewidth=150)
 
 
 class DSGE(object):
@@ -75,13 +75,14 @@ class DSGE(object):
 
         return df_obs, df_states
 
-    def estimate(self, nsim=1000, ck=0.2, head_start=None):
+    def estimate(self, nsim=1000, ck=0.2, file_path=None):
 
-        # TODO try to read file. If fails, start new model
+        try:
+            df_chains = pd.read_hdf(file_path, key='chains')
+            sigmak = pd.read_hdf(file_path, key='sigmak')
+            start = df_chains.index[-1]
 
-        if head_start is None:
-            head_start = 'dsge output ' + pd.to_datetime('today').strftime('%Y-%m-%d-%H-%M') + '.h5'
-
+        except FileNotFoundError:
             def obj_func(theta_irr):
                 theta_irr = {k: v for k, v in zip(self.params, theta_irr)}
                 theta_res = self._irr2res(theta_irr)
@@ -91,26 +92,24 @@ class DSGE(object):
             theta_irr0 = self._res2irr(theta_res0)
             theta_irr0 = array(list(theta_irr0.values()))
 
+            # TODO switch to basinhoping optimization (slower but better)
             res = minimize(obj_func, theta_irr0, options={'disp': False})
             theta_mode_irr = {k: v for k, v in zip(self.params, res.x)}
             theta_mode_res = self._irr2res(theta_mode_irr)
             sigmak = ck * res.hess_inv
 
-            df_chains = pd.DataFrame(columns=[str(p) for p in list(self.params)], index=range(nsim))
-            df_chains.loc[0] = list(theta_mode_res.values())
-            start = 0
+            # TODO inicializar na média da priori?
+            theta_mode_res = self.prior_info['mean']
 
-        else:
-            # TODO check components
-            df_chains = pd.read_hdf(head_start, key='chains')
-            sigmak = pd.read_hdf(head_start, key='sigmak')
-            start = df_chains.index[-1]
+            df_chains = pd.DataFrame(columns=[str(p) for p in list(self.params)], index=range(nsim))
+            df_chains.loc[0] = list(theta_mode_res.values)
+            start = 0
 
         # Metropolis-Hastings
         muk = zeros(self.n_param)
         accepted = 0
 
-        # TODO add support for HDF5 save and continuation
+        # TODO optimize with pymc
         for ii in tqdm(range(start + 1, start+nsim), 'Metropolis-Hastings'):
             theta1 = {k: v for k, v in zip(self.params, df_chains.loc[ii - 1].values)}
             pos1 = self._calc_posterior(theta1)
@@ -129,12 +128,12 @@ class DSGE(object):
                 df_chains.loc[ii] = df_chains.loc[ii - 1]
 
             if ii % 100 == 0:
-                store = pd.HDFStore(head_start)
+                store = pd.HDFStore(file_path)
                 store['chains'] = df_chains
                 store['sigmak'] = pd.DataFrame(data=sigmak)
                 store.close()
 
-        store = pd.HDFStore(head_start)
+        store = pd.HDFStore(file_path)
         store['chains'] = df_chains
         store['sigmak'] = pd.DataFrame(data=sigmak)
         store.close()
@@ -337,11 +336,17 @@ def gensys(g0, g1, c, psi, pi, div=None, realsmall=0.000001):
 
     if div is None:
         div = 1.01
+        fixdiv = False
+    else:
+        fixdiv = True
 
-    a, b, q, z = qz(g0, g1)
+    a, b, q, z = qz(g0, g1, 'complex')
+
+    # Scipy's version of 'qz' is different from MATLAB's, Q needs to be hermitian transposed to get same output
+    q = array(matrix(q).H)
 
     for i in range(n):
-        if div is None:
+        if not fixdiv:
             if abs(a[i, i]) > 0:
 
                 divhat = abs(b[i, i]/a[i, i])
@@ -384,6 +389,7 @@ def gensys(g0, g1, c, psi, pi, div=None, realsmall=0.000001):
     else:
         ueta, deta, veta = svd(etawt)
         deta = diag(deta)
+        veta = array(matrix(veta).H)
         md = min(deta.shape)
         bigev = where(diagonal(deta[:md, :md]) > realsmall)[0]
         ueta = ueta[:, bigev]
@@ -407,6 +413,7 @@ def gensys(g0, g1, c, psi, pi, div=None, realsmall=0.000001):
         ndeta1 = min(n - nunstab, neta)
         ueta1, deta1, veta1 = svd(etawt1)
         deta1 = diag(deta1)
+        veta1 = array(matrix(veta1).H)  # TODO check if transpose, instead of hermitian
         md = min(deta1.shape)
         bigev = where(diagonal(deta1[:md, :md]) > realsmall)[0]
         ueta1 = ueta1[:, bigev]
@@ -432,7 +439,7 @@ def gensys(g0, g1, c, psi, pi, div=None, realsmall=0.000001):
         # print(f'Indeterminacy. Loose endogenous variables.')
         pass
 
-    tmat = hstack((eye(n - nunstab), -(ueta @ (inv(deta) @ veta.T) @ veta1.T @ deta1 @ ueta1.T).T))
+    tmat = hstack((eye(n - nunstab), -(ueta @ (inv(deta) @ matrix(veta).H) @ veta1 @ deta1 @ matrix(ueta1).H).H))
     G0 = vstack((tmat @ a, hstack((zeros((nunstab, n - nunstab)), eye(nunstab)))))
     G1 = vstack((tmat @ b, zeros((nunstab, n))))
 
@@ -445,12 +452,12 @@ def gensys(g0, g1, c, psi, pi, div=None, realsmall=0.000001):
     fwt = -inv(b[usix, :][:, usix]) @ q2 @ psi
     ywt = G0I[:, usix]
 
-    loose = G0I @ vstack((etawt1 @ (eye(neta) - veta @ veta.T), zeros((nunstab, neta))))
-    G1 = (z @ G1 @ z.T).real
-    C = (z @ C).real
-    impact = (z @ impact).real
-    loose = (z @ loose).real
-    ywt = z @ ywt
+    loose = G0I @ vstack((etawt1 @ (eye(neta) - veta @ matrix(veta).H), zeros((nunstab, neta))))
+    G1 = array((z @ G1 @ matrix(z).H).real)
+    C = array((z @ C).real)
+    impact = array((z @ impact).real)
+    loose = array((z @ loose).real)
+    ywt = array(z @ ywt)
 
     return G1, C, impact, fmat, fwt, ywt, gev, eu, loose
 
@@ -463,7 +470,7 @@ def qzdiv(stake, A, B, Q, Z, v=None):
 
     n = A.shape[0]
 
-    root = vstack([diagonal(A), diagonal(B)]).T
+    root = abs(vstack([diagonal(A), diagonal(B)]).T)
 
     root[:, 0] = root[:, 0] - (root[:, 0] < 1.e-13) * (root[:, 0] + root[:, 1])
     root[:, 1] = root[:, 1] / root[:, 0]
@@ -511,8 +518,8 @@ def qzswitch(i, A, B, Q, Z):
         else:
             # l.r. coincident zeros. put zeros in u.l. of a.
             wz = array([[b], [-a]])
-            wz = wz / ((wz.T @ wz) ** 0.5)
-            wz = array([[wz[0][0],  wz[1][0]], [wz[1][0], -wz[0][0]]])
+            wz = wz / ((matrix(wz).H @ matrix(wz))[0, 0] ** 0.5)
+            wz = array([[wz[0][0],  wz[1][0].conj()], [wz[1][0], -wz[0][0].conj()]])
             xy = eye(2)
     elif (abs(a) < realsmall) and (abs(d) < realsmall):
         if abs(c) < realsmall:
@@ -521,15 +528,15 @@ def qzswitch(i, A, B, Q, Z):
         else:
             # u.l. coincident zeros. put zeros in u.l. of A
             wz = eye(2)
-            xy = array([b, -a])
-            xy = xy / ((xy @ xy)**0.5)
-            xy = array([[xy[1][0],  -xy[0][0]], [xy[0][0], xy[1][0]]])
+            xy = array([c, -b])
+            xy = xy / (matrix(xy) @ matrix(xy).H)[0, 0] ** 0.5
+            xy = array([[xy[1].conj(),  -xy[0].conj()], [xy[0], xy[1]]])
     else:
         # Usual Case
-        wz = array([c*e - f*b, c*d - f*a])
-        xy = array([b*d - e*a, c*d - f*a])
-        n = ((wz @ wz) ** 0.5)
-        m = ((xy @ xy) ** 0.5)
+        wz = array([c*e - f*b, (c*d - f*a).conj()])
+        xy = array([(b*d - e*a).conj(), (c*d - f*a).conj()])
+        n = (matrix(wz) @ matrix(wz).H)[0, 0] ** 0.5
+        m = (matrix(xy) @ matrix(xy).H)[0, 0] ** 0.5
 
         if m < eps*100:
             # all elements of A and B are proportional
@@ -537,8 +544,8 @@ def qzswitch(i, A, B, Q, Z):
 
         wz = wz / n
         xy = xy / m
-        wz = array([[wz[0], wz[1]], [-wz[1], wz[0]]])
-        xy = array([[xy[0], xy[1]], [-xy[1], xy[0]]])
+        wz = array([[wz[0], wz[1]], [-wz[1].conj(), wz[0].conj()]])
+        xy = array([[xy[0], xy[1]], [-xy[1].conj(), xy[0].conj()]])
 
     A[i:i + 2, :] = xy @ A[i:i + 2, :]
     B[i:i + 2, :] = xy @ B[i:i + 2, :]

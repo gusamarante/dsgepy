@@ -1,10 +1,7 @@
+import numpy as np
 from sympy import *
 from pydsge import DSGE
-import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
-
-
 
 
 # ================================
@@ -78,8 +75,8 @@ print(dsge_simul.eu)
 
 df_obs, df_states = dsge_simul.simulate(n_obs=150)
 
-df_states.plot()
-plt.show()
+# df_states.plot()
+# plt.show()
 
 
 # =============================
@@ -101,7 +98,7 @@ prior_dict = {sigma:   {'dist': 'gamma',    'param a': 4,    'param b': 0.25},
 dsge = DSGE(endog, endogl, exog, expec, param, equations, prior_dict=prior_dict,
             obs_matrix=obs_matrix, obs_data=df_obs, obs_offset=obs_offset)
 
-df_chains, accepted = dsge.estimate(nsim=500, ck=0.01, file_path='snkm.h5')
+df_chains, accepted = dsge.estimate(nsim=10000, ck=0.001, file_path='snkm.h5')
 print(accepted)
 df_chains.plot()
 plt.show()

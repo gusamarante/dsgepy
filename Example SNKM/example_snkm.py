@@ -104,7 +104,7 @@ prior_dict = {sigma:   {'dist': 'gamma',    'param a': 2,     'param b': 1},
 dsge = DSGE(endog, endogl, exog, expec, param, equations, prior_dict=prior_dict,
             obs_matrix=obs_matrix, obs_data=df_obs, obs_offset=obs_offset)
 
-df_chains, accepted = dsge.estimate(nsim=100, ck=0.01, file_path='snkm2.h5')
+df_chains, accepted = dsge.estimate(nsim=200, ck=0.01, file_path='snkm2.h5')
 print(accepted)
 df_chains.plot()
 plt.show()

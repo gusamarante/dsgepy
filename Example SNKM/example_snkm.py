@@ -91,15 +91,15 @@ plt.show()
 # priors
 prior_dict = {sigma:    {'dist': 'gamma',    'param a': 2,     'param b': 1},
               psi:      {'dist': 'gamma',    'param a': 2,     'param b': 1},
-              beta:     {'dist': 'beta',     'param a': 20, 'param b': 2},
-              kappa:    {'dist': 'gamma',    'param a': 0.2,     'param b': 1},
-              phi_pi:   {'dist': 'gamma',    'param a': 1.5,     'param b': 1},
+              beta:     {'dist': 'beta',     'param a': 20,    'param b': 2},
+              kappa:    {'dist': 'gamma',    'param a': 0.2,   'param b': 1},
+              phi_pi:   {'dist': 'gamma',    'param a': 1.5,   'param b': 1},
               phi_y:    {'dist': 'gamma',    'param a': 2,     'param b': 1},
               rho_a:    {'dist': 'beta',     'param a': 2.625, 'param b': 2.625},
               sigma_a:  {'dist': 'invgamma', 'param a': 3,     'param b': 1},
               rho_v:    {'dist': 'beta',     'param a': 2.625, 'param b': 2.625},
-              sigma_v:  {'dist': 'invgamma', 'param a': 3, 'param b': 1},
-              sigma_pi: {'dist': 'invgamma', 'param a': 3, 'param b': 1}}
+              sigma_v:  {'dist': 'invgamma', 'param a': 3,     'param b': 1},
+              sigma_pi: {'dist': 'invgamma', 'param a': 3,     'param b': 1}}
 
 dsge = DSGE(endog, endogl, exog, expec, param, equations, prior_dict=prior_dict,
             obs_matrix=obs_matrix, obs_data=df_obs, obs_offset=obs_offset)

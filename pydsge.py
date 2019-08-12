@@ -161,7 +161,7 @@ class DSGE(object):
         P = self._calc_prior(theta)
         L = self._log_likelihood(theta)
         f = P + L
-        return f * 10000
+        return f
 
     def _calc_prior(self, theta):
         prior_dict = self.prior_dict

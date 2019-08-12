@@ -5,7 +5,7 @@ from scipy.linalg import qz
 from pykalman import KalmanFilter
 from numpy.linalg import svd, inv
 from scipy.optimize import minimize, basinhopping
-from numpy.random import multivariate_normal, rand
+from numpy.random import multivariate_normal, rand, seed
 from numpy import diagonal, vstack, array, eye, where, diag, sqrt, hstack, zeros, \
     arange, exp, log, inf, nan, isnan, isinf, set_printoptions, matrix
 
@@ -19,6 +19,7 @@ class DSGE(object):
     # TODO Forecast error variance
     # TODO Series Forecast
     # TODO Historical Decomposition
+    # TODO Prior Posterior Table in Latex
     # TODO Model Identification (Iskrev's paper)
 
     prior_info = None
@@ -58,9 +59,12 @@ class DSGE(object):
         else:
             self.prior_info = self._get_prior_info()
 
-    def simulate(self, n_obs=100):
+    def simulate(self, n_obs=100, random_seed=None):
 
         assert self._has_solution, "No solution was generated yet"
+
+        if not (random_seed is None):
+            seed(random_seed)
 
         # TODO add observation covariance to allow for measurment errors
         kf = KalmanFilter(self.G1, self.obs_matrix, self.impact @ self.impact.T, None,
@@ -93,7 +97,7 @@ class DSGE(object):
             theta_irr0 = array(list(theta_irr0.values()))
 
             # Old optimization
-            res = minimize(obj_func, theta_irr0, options={'disp': False})
+            res = minimize(obj_func, theta_irr0, options={'disp': False}, method='BFGS')
             theta_mode_irr = {k: v for k, v in zip(self.params, res.x)}
             theta_mode_res = self._irr2res(theta_mode_irr)
             sigmak = ck * res.hess_inv
@@ -161,7 +165,7 @@ class DSGE(object):
         P = self._calc_prior(theta)
         L = self._log_likelihood(theta)
         f = P + L
-        return f
+        return f*1000
 
     def _calc_prior(self, theta):
         prior_dict = self.prior_dict
@@ -563,7 +567,8 @@ def qzswitch(i, A, B, Q, Z):
     return A, B, Q, Z
 
 
-def EvaluateChains():
+def evaluate_chains():
+    # TODO Class or function?
     # TODO Prior Density VS Posterior histogram
     # TODO Table with mean and std from priors and poteriors
     # TODO Output a model calibrated with posteriors

@@ -58,7 +58,7 @@ calib_dict = {sigma: 1,
               phi_pi: 1.5,
               phi_y: 0.5/4,
               rho_a: 0.9,
-              sigma_a: 1,
+              sigma_a: 0.1,
               rho_v: 0.5,
               sigma_v: 0.0625}
 
@@ -74,32 +74,37 @@ dsge_simul = DSGE(endog, endogl, exog, expec, param, equations, calib_dict, obs_
 print(dsge_simul.eu)
 
 # TODO give random seed
-df_obs, df_states = dsge_simul.simulate(n_obs=100)
+df_obs, df_states = dsge_simul.simulate(n_obs=150, random_seed=1)
 
-# df_states.plot()
-# plt.show()
+df_states = df_states.tail(100)
+df_obs = df_obs.tail(100)
+
+df_states.plot()
+plt.show()
 
 
 # =============================
 # ===== MODEL ESTIMATION  =====
 # =============================
 
+# TODO change prior table to choose mean and std
+
 # priors
-prior_dict = {sigma:   {'dist': 'gamma',    'param a': 4,    'param b': 0.25},
-              psi:     {'dist': 'gamma',    'param a': 4,    'param b': 0.25},
-              beta:    {'dist': 'beta',     'param a': 10,   'param b': 1.00},
-              kappa:   {'dist': 'uniform',  'param a': 0,    'param b': 1.00},
-              phi_pi:  {'dist': 'gamma',    'param a': 1.5,  'param b': 1.00},
-              phi_y:   {'dist': 'gamma',    'param a': 0.25, 'param b': 0.50},
-              rho_a:   {'dist': 'beta',     'param a': 2,    'param b': 2.00},
-              sigma_a: {'dist': 'invgamma', 'param a': 6,    'param b': 5.00},
-              rho_v:   {'dist': 'beta',     'param a': 2,    'param b': 2.00},
-              sigma_v: {'dist': 'invgamma', 'param a': 2.5,  'param b': 1.50}}
+prior_dict = {sigma:   {'dist': 'gamma',    'param a': 2,     'param b': 1},
+              psi:     {'dist': 'gamma',    'param a': 2,     'param b': 1},
+              beta:    {'dist': 'beta',     'param a': 2.625, 'param b': 2.625},
+              kappa:   {'dist': 'gamma',    'param a': 2,     'param b': 1},
+              phi_pi:  {'dist': 'gamma',    'param a': 2,     'param b': 1},
+              phi_y:   {'dist': 'gamma',    'param a': 2,     'param b': 1},
+              rho_a:   {'dist': 'beta',     'param a': 2.625, 'param b': 2.625},
+              sigma_a: {'dist': 'invgamma', 'param a': 3,     'param b': 1},
+              rho_v:   {'dist': 'beta',     'param a': 2.625, 'param b': 2.625},
+              sigma_v: {'dist': 'invgamma', 'param a': 3,     'param b': 1}}
 
 dsge = DSGE(endog, endogl, exog, expec, param, equations, prior_dict=prior_dict,
             obs_matrix=obs_matrix, obs_data=df_obs, obs_offset=obs_offset)
 
-df_chains, accepted = dsge.estimate(nsim=100, ck=0.002, file_path='snkm.h5')
+df_chains, accepted = dsge.estimate(nsim=100, ck=0.01, file_path='snkm2.h5')
 print(accepted)
 df_chains.plot()
 plt.show()

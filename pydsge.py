@@ -97,10 +97,12 @@ class DSGE(object):
             theta_irr0 = array(list(theta_irr0.values()))
 
             # Old optimization
-            res = minimize(obj_func, theta_irr0, options={'disp': False}, method='BFGS')
+            res = minimize(obj_func, theta_irr0, options={'disp': False})
             theta_mode_irr = {k: v for k, v in zip(self.params, res.x)}
             theta_mode_res = self._irr2res(theta_mode_irr)
             sigmak = ck * res.hess_inv
+
+            print(theta_mode_res)
 
             # new optimization
             # res = basinhopping(obj_func, theta_irr0, minimizer_kwargs={'method': 'SLSQP'})

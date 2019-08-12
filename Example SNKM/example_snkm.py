@@ -73,6 +73,7 @@ obs_offset[0] = rho
 dsge_simul = DSGE(endog, endogl, exog, expec, param, equations, calib_dict, obs_matrix, obs_offset)
 print(dsge_simul.eu)
 
+# TODO give random seed
 df_obs, df_states = dsge_simul.simulate(n_obs=100)
 
 # df_states.plot()

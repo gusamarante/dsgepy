@@ -4,7 +4,7 @@ from sympy import simplify
 from scipy.linalg import qz
 from pykalman import KalmanFilter
 from numpy.linalg import svd, inv
-from scipy.optimize import minimize
+from scipy.optimize import minimize, basinhopping
 from numpy.random import multivariate_normal, rand
 from numpy import diagonal, vstack, array, eye, where, diag, sqrt, hstack, zeros, \
     arange, exp, log, inf, nan, isnan, isinf, set_printoptions, matrix
@@ -92,14 +92,20 @@ class DSGE(object):
             theta_irr0 = self._res2irr(theta_res0)
             theta_irr0 = array(list(theta_irr0.values()))
 
-            # TODO switch to basinhoping optimization (slower but better)
-            res = minimize(obj_func, theta_irr0, options={'disp': False})
+            # Old optimization
+            # res = minimize(obj_func, theta_irr0, options={'disp': False})
+            # theta_mode_irr = {k: v for k, v in zip(self.params, res.x)}
+            # theta_mode_res = self._irr2res(theta_mode_irr)
+            # sigmak = ck * res.hess_inv
+
+            # new optimization
+            res = basinhopping(obj_func, theta_irr0, minimizer_kwargs={'method': 'SLSQP'})
             theta_mode_irr = {k: v for k, v in zip(self.params, res.x)}
             theta_mode_res = self._irr2res(theta_mode_irr)
             sigmak = ck * res.hess_inv
 
-            # TODO inicializar na média da priori?
-            theta_mode_res = self.prior_info['mean']
+            # Overrides the result of the optimization
+            # theta_mode_res = self.prior_info['mean']
 
             df_chains = pd.DataFrame(columns=[str(p) for p in list(self.params)], index=range(nsim))
             df_chains.loc[0] = list(theta_mode_res.values)

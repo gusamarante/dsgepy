@@ -93,19 +93,19 @@ class DSGE(object):
             theta_irr0 = array(list(theta_irr0.values()))
 
             # Old optimization
-            # res = minimize(obj_func, theta_irr0, options={'disp': False})
-            # theta_mode_irr = {k: v for k, v in zip(self.params, res.x)}
-            # theta_mode_res = self._irr2res(theta_mode_irr)
-            # sigmak = ck * res.hess_inv
-
-            # new optimization
-            res = basinhopping(obj_func, theta_irr0, minimizer_kwargs={'method': 'SLSQP'})
+            res = minimize(obj_func, theta_irr0, options={'disp': False})
             theta_mode_irr = {k: v for k, v in zip(self.params, res.x)}
             theta_mode_res = self._irr2res(theta_mode_irr)
             sigmak = ck * res.hess_inv
 
+            # new optimization
+            # res = basinhopping(obj_func, theta_irr0, minimizer_kwargs={'method': 'SLSQP'})
+            # theta_mode_irr = {k: v for k, v in zip(self.params, res.x)}
+            # theta_mode_res = self._irr2res(theta_mode_irr)
+            # sigmak = ck * res.hess_inv
+
             # Overrides the result of the optimization
-            # theta_mode_res = self.prior_info['mean']
+            theta_mode_res = self.prior_info['mean']
 
             df_chains = pd.DataFrame(columns=[str(p) for p in list(self.params)], index=range(nsim))
             df_chains.loc[0] = list(theta_mode_res.values)
@@ -161,7 +161,7 @@ class DSGE(object):
         P = self._calc_prior(theta)
         L = self._log_likelihood(theta)
         f = P + L
-        return f
+        return f * 10000
 
     def _calc_prior(self, theta):
         prior_dict = self.prior_dict

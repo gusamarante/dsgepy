@@ -5,7 +5,6 @@ from sympy import simplify
 from scipy.linalg import qz
 from pykalman import KalmanFilter
 from numpy.linalg import svd, inv
-from tables import PerformanceWarning
 from scipy.optimize import minimize, basinhopping
 from numpy.random import multivariate_normal, rand, seed
 from numpy import diagonal, vstack, array, eye, where, diag, sqrt, hstack, zeros, \
@@ -101,10 +100,10 @@ class DSGE(object):
             theta_irr0 = array(list(theta_irr0.values()))
 
             # Optimization - SciPy minimize
-            # res = minimize(obj_func, theta_irr0, options={'disp': False})
-            # theta_mode_irr = {k: v for k, v in zip(self.params, res.x)}
-            # theta_mode_res = self._irr2res(theta_mode_irr)
-            # sigmak = ck * res.hess_inv
+            res = minimize(obj_func, theta_irr0, options={'disp': False})
+            theta_mode_irr = {k: v for k, v in zip(self.params, res.x)}
+            theta_mode_res = self._irr2res(theta_mode_irr)
+            sigmak = ck * res.hess_inv
 
             # Optimization - Basinhoping
             # res = basinhopping(obj_func, theta_irr0)
@@ -114,7 +113,7 @@ class DSGE(object):
 
             # Overrides the result of the optimization
             theta_mode_res = self.prior_info['mean']
-            sigmak = ck * eye(self.n_param)
+            # sigmak = ck * eye(self.n_param)
 
             df_chains = pd.DataFrame(columns=[str(p) for p in list(self.params)], index=range(nsim))
             df_chains.loc[0] = list(theta_mode_res.values)

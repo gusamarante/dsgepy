@@ -46,7 +46,6 @@ eq7 = pi - exp_pil - eta_pi
 
 
 equations = Matrix([eq1, eq2, eq3, eq4, eq5, eq6, eq7])
-# equations = equations.subs({beta: 0.99})
 
 # ======================
 # ===== SIMULATION =====

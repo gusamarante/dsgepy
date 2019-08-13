@@ -46,6 +46,7 @@ eq7 = pi - exp_pil - eta_pi
 
 
 equations = Matrix([eq1, eq2, eq3, eq4, eq5, eq6, eq7])
+# equations = equations.subs({beta: 0.99})
 
 # ======================
 # ===== SIMULATION =====
@@ -74,13 +75,13 @@ obs_offset[0] = rho
 dsge_simul = DSGE(endog, endogl, exog, expec, param, equations, calib_dict, obs_matrix, obs_offset)
 print(dsge_simul.eu)
 
-df_obs, df_states = dsge_simul.simulate(n_obs=200, random_seed=1)
+df_obs, df_states = dsge_simul.simulate(n_obs=150, random_seed=1)
 
-df_states = df_states.tail(150)
-df_obs = df_obs.tail(150)
+df_states = df_states.tail(100)
+df_obs = df_obs.tail(100)
 
-df_states.plot()
-plt.show()
+# df_states.plot()
+# plt.show()
 
 
 # =============================
@@ -89,12 +90,12 @@ plt.show()
 
 # TODO change prior table to choose mean and std
 # priors
-prior_dict = {sigma:    {'dist': 'gamma',    'param a': 2,     'param b': 1},
-              psi:      {'dist': 'gamma',    'param a': 2,     'param b': 1},
+prior_dict = {sigma:    {'dist': 'gamma',    'param a': 1,     'param b': 1},
+              psi:      {'dist': 'gamma',    'param a': 0.2,     'param b': 1},
               beta:     {'dist': 'beta',     'param a': 20,    'param b': 2},
-              kappa:    {'dist': 'gamma',    'param a': 0.2,   'param b': 1},
+              kappa:    {'dist': 'gamma',    'param a': 0.5,   'param b': 1},
               phi_pi:   {'dist': 'gamma',    'param a': 1.5,   'param b': 1},
-              phi_y:    {'dist': 'gamma',    'param a': 2,     'param b': 1},
+              phi_y:    {'dist': 'gamma',    'param a': 0.5,     'param b': 1},
               rho_a:    {'dist': 'beta',     'param a': 2.625, 'param b': 2.625},
               sigma_a:  {'dist': 'invgamma', 'param a': 3,     'param b': 1},
               rho_v:    {'dist': 'beta',     'param a': 2.625, 'param b': 2.625},
@@ -104,7 +105,7 @@ prior_dict = {sigma:    {'dist': 'gamma',    'param a': 2,     'param b': 1},
 dsge = DSGE(endog, endogl, exog, expec, param, equations, prior_dict=prior_dict,
             obs_matrix=obs_matrix, obs_data=df_obs, obs_offset=obs_offset)
 
-df_chains, accepted = dsge.estimate(nsim=200, ck=0.01, file_path='snkm.h5')
+df_chains, accepted = dsge.estimate(nsim=100, ck=0.001, file_path='snkm.h5')
 print(accepted)
 df_chains.plot()
 plt.show()

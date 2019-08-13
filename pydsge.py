@@ -1,15 +1,19 @@
+import warnings
 import pandas as pd
 from tqdm import tqdm
 from sympy import simplify
 from scipy.linalg import qz
 from pykalman import KalmanFilter
 from numpy.linalg import svd, inv
+from tables import PerformanceWarning
 from scipy.optimize import minimize, basinhopping
 from numpy.random import multivariate_normal, rand, seed
 from numpy import diagonal, vstack, array, eye, where, diag, sqrt, hstack, zeros, \
     arange, exp, log, inf, nan, isnan, isinf, set_printoptions, matrix
-
 set_printoptions(precision=4, suppress=True, linewidth=150)
+
+
+warnings.filterwarnings('ignore')  # category=PerformanceWarning
 
 
 class DSGE(object):
@@ -96,22 +100,21 @@ class DSGE(object):
             theta_irr0 = self._res2irr(theta_res0)
             theta_irr0 = array(list(theta_irr0.values()))
 
-            # Old optimization
-            res = minimize(obj_func, theta_irr0, options={'disp': False})
-            theta_mode_irr = {k: v for k, v in zip(self.params, res.x)}
-            theta_mode_res = self._irr2res(theta_mode_irr)
-            sigmak = ck * res.hess_inv
+            # Optimization - SciPy minimize
+            # res = minimize(obj_func, theta_irr0, options={'disp': False})
+            # theta_mode_irr = {k: v for k, v in zip(self.params, res.x)}
+            # theta_mode_res = self._irr2res(theta_mode_irr)
+            # sigmak = ck * res.hess_inv
 
-            print(theta_mode_res)
-
-            # new optimization
-            # res = basinhopping(obj_func, theta_irr0, minimizer_kwargs={'method': 'SLSQP'})
+            # Optimization - Basinhoping
+            # res = basinhopping(obj_func, theta_irr0)
             # theta_mode_irr = {k: v for k, v in zip(self.params, res.x)}
             # theta_mode_res = self._irr2res(theta_mode_irr)
             # sigmak = ck * res.hess_inv
 
             # Overrides the result of the optimization
             theta_mode_res = self.prior_info['mean']
+            sigmak = ck * eye(self.n_param)
 
             df_chains = pd.DataFrame(columns=[str(p) for p in list(self.params)], index=range(nsim))
             df_chains.loc[0] = list(theta_mode_res.values)

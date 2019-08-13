@@ -4,15 +4,16 @@ from tqdm import tqdm
 from sympy import simplify
 from scipy.linalg import qz
 from pykalman import KalmanFilter
-from numpy.linalg import svd, inv
+from numpy.linalg import svd, inv, eig
+from tables import PerformanceWarning
 from scipy.optimize import minimize, basinhopping
 from numpy.random import multivariate_normal, rand, seed
 from numpy import diagonal, vstack, array, eye, where, diag, sqrt, hstack, zeros, \
     arange, exp, log, inf, nan, isnan, isinf, set_printoptions, matrix
 set_printoptions(precision=4, suppress=True, linewidth=150)
 
-
-warnings.filterwarnings('ignore')  # category=PerformanceWarning
+warnings.filterwarnings('ignore', category=RuntimeWarning)
+warnings.filterwarnings('ignore', category=PerformanceWarning)
 
 
 class DSGE(object):
@@ -26,45 +27,48 @@ class DSGE(object):
     # TODO Model Identification (Iskrev's paper)
 
     prior_info = None
+    has_solution = False
 
-    def __init__(self, endog, endogl, exog, expec, params, equations, calib_dict=None,
-                 obs_matrix=None, obs_offset=None, prior_dict=None, obs_data=None, verbose=True):
+    def __init__(self, endog, endogl, exog, expec, equations, estimate_params=None, calib_dict=None,
+                 obs_matrix=None, obs_offset=None, prior_dict=None, obs_data=None):
 
         # TODO assert prior info (inv gamma a!=2 and a!=1)
-        # TODO mudar default verbose para False
 
         self.endog = endog
         self.endogl = endogl
         self.exog = exog
         self.expec = expec
-        self.params = params
+        self.params = estimate_params
         self.equations = equations
         self.obs_matrix = obs_matrix
         self.obs_offset = obs_offset
         self.prior_dict = prior_dict
         self.data = obs_data
         self.n_state = len(endog)
-        self.n_param = len(params)
+        self.n_param = None if estimate_params is None else len(estimate_params)
         self.n_obs = obs_matrix.shape[0]
-        self._has_solution = False
-        self.verbose = verbose
         self._get_jacobians()
 
-        # If subs_dict is passed, generate the solution
-        if not (calib_dict is None):
+        if estimate_params is None:
+            # If no parameters are going to be estimated, calibrate the whole model
             self.Gamma0, self.Gamma1, self.Psi, self.Pi, self.C_in, self.obs_matrix, self.obs_offset = \
-                self._eval_matrix(calib_dict)
+                self._eval_matrix(calib_dict, to_array=True)
 
             self.G1, self.C_out, self.impact, self.fmat, self.fwt, self.ywt, self.gev, self.eu, self.loose = \
                 gensys(self.Gamma0, self.Gamma1, self.C_in, self.Psi, self.Pi)
 
-            self._has_solution = True
+            # TODO assert that there are no symbols left
+
+            self.has_solution = True
         else:
+            # Otherwise, calibrate only the required parameters
+            self.Gamma0, self.Gamma1, self.Psi, self.Pi, self.C_in, self.obs_matrix, self.obs_offset = \
+                self._eval_matrix(calib_dict, to_array=False)
             self.prior_info = self._get_prior_info()
 
     def simulate(self, n_obs=100, random_seed=None):
 
-        assert self._has_solution, "No solution was generated yet"
+        assert self.has_solution, "No solution was generated yet"
 
         if not (random_seed is None):
             seed(random_seed)
@@ -100,10 +104,13 @@ class DSGE(object):
             theta_irr0 = array(list(theta_irr0.values()))
 
             # Optimization - SciPy minimize
-            res = minimize(obj_func, theta_irr0, options={'disp': False})
+            res = minimize(obj_func, theta_irr0, options={'disp': True}, method='BFGS')
             theta_mode_irr = {k: v for k, v in zip(self.params, res.x)}
             theta_mode_res = self._irr2res(theta_mode_irr)
             sigmak = ck * res.hess_inv
+            print(theta_mode_res, '\n')
+            print(sigmak, '\n')
+            print(eig(sigmak), '\n')
 
             # Optimization - Basinhoping
             # res = basinhopping(obj_func, theta_irr0)
@@ -197,7 +204,7 @@ class DSGE(object):
                 pdf_i = 1/(b - a)
 
             else:  # Normal
-                pdf_i = exp(((theta_i - a)**2)/(2 * (b**2)))
+                pdf_i = exp(-((theta_i - a)**2)/(2 * (b**2)))
 
             df_prior.loc[str(param), 'pdf'] = pdf_i
 
@@ -208,7 +215,7 @@ class DSGE(object):
         return P
 
     def _log_likelihood(self, theta):
-        Gamma0, Gamma1, Psi, Pi, C_in, obs_matrix, obs_offset = self._eval_matrix(theta)
+        Gamma0, Gamma1, Psi, Pi, C_in, obs_matrix, obs_offset = self._eval_matrix(theta, to_array=True)
 
         for mat in [Gamma0, Gamma1, Psi, Pi, C_in]:
             if isnan(mat).any() or isinf(mat).any():
@@ -226,18 +233,31 @@ class DSGE(object):
 
         return L
 
-    def _eval_matrix(self, theta):
+    def _eval_matrix(self, theta, to_array):
 
-        # state matrices
-        Gamma0 = array(self.Gamma0.subs(theta)).astype(float)
-        Gamma1 = array(self.Gamma1.subs(theta)).astype(float)
-        Psi = array(self.Psi.subs(theta)).astype(float)
-        Pi = array(self.Pi.subs(theta)).astype(float)
-        C_in = array(self.C_in.subs(theta)).astype(float)
+        if to_array:
+            # state matrices
+            Gamma0 = array(self.Gamma0.subs(theta)).astype(float)
+            Gamma1 = array(self.Gamma1.subs(theta)).astype(float)
+            Psi = array(self.Psi.subs(theta)).astype(float)
+            Pi = array(self.Pi.subs(theta)).astype(float)
+            C_in = array(self.C_in.subs(theta)).astype(float)
 
-        # observation matrices
-        obs_matrix = array(self.obs_matrix.subs(theta)).astype(float)
-        obs_offset = array(self.obs_offset.subs(theta)).astype(float)
+            # observation matrices
+            obs_matrix = array(self.obs_matrix.subs(theta)).astype(float)
+            obs_offset = array(self.obs_offset.subs(theta)).astype(float)
+        else:
+            # state matrices
+            Gamma0 = self.Gamma0.subs(theta)
+            Gamma1 = self.Gamma1.subs(theta)
+            Psi = self.Psi.subs(theta)
+            Pi = self.Pi.subs(theta)
+            C_in = self.C_in.subs(theta)
+
+            # observation matrices
+            obs_matrix = self.obs_matrix.subs(theta)
+            obs_offset = self.obs_offset.subs(theta)
+
 
         return Gamma0, Gamma1, Psi, Pi, C_in, obs_matrix, obs_offset
 
@@ -412,8 +432,12 @@ def gensys(g0, g1, c, psi, pi, div=None, realsmall=0.000001):
         if deta.ndim == 1:
             deta = diag(deta)
 
-    if len(bigev) >= nunstab:
-        eu[0] = 1
+    # TODO check this
+    try:
+        if len(bigev) >= nunstab:
+            eu[0] = 1
+    except TypeError:
+        a = 1
 
     # Case for all stable roots
     if nunstab == n:

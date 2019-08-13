@@ -28,15 +28,18 @@ eta_y, eta_pi = symbols('eta_y, eta_pi')
 expec = Matrix([eta_y, eta_pi])
 
 # parameters
-sigma, psi, beta, kappa, phi_pi, phi_y, rho_a, sigma_a, rho_v, sigma_v, sigma_pi = \
-    symbols('sigma, psi, beta, kappa, phi_pi, phi_y, rho_a, sigma_a, rho_v, sigma_v, sigma_pi')
+sigma, varphi, alpha, beta, theta, phi_pi, phi_y, rho_a, sigma_a, rho_v, sigma_v, sigma_pi = \
+    symbols('sigma, varphi, alpha, beta, theta, phi_pi, phi_y, rho_a, sigma_a, rho_v, sigma_v, sigma_pi')
 
-param = Matrix([sigma, psi, beta, kappa, phi_pi, phi_y, rho_a, sigma_a, rho_v, sigma_v, sigma_pi])
+estimate_param = Matrix([sigma, theta, phi_pi, phi_y, rho_a, sigma_a, rho_v, sigma_v, sigma_pi])
+calib_param = {varphi: 1, alpha:0.4, beta: 0.997805}
 
-rho = (1/beta) - 1
+# Summary parameters
+psi_nya = (1 + varphi) / (sigma*(1-alpha) + varphi + alpha)
+kappa = (1 - theta)*(1 - theta * beta)*(sigma*(1-alpha) + varphi + alpha)
 
 # model equations
-eq1 = y - exp_y + (1/sigma)*(i - exp_pi - psi * rho_a * a)
+eq1 = y - exp_y + (1/sigma)*(i - exp_pi) - psi_nya * (rho_a - 1) * a
 eq2 = pi - beta * exp_pi - kappa * y - sigma_pi * eps_pi
 eq3 = i - phi_pi * pi - phi_y * y - v
 eq4 = a - rho_a * al - sigma_a * eps_a
@@ -44,24 +47,25 @@ eq5 = v - rho_v * vl - sigma_v * eps_v
 eq6 = y - exp_yl - eta_y
 eq7 = pi - exp_pil - eta_pi
 
-
 equations = Matrix([eq1, eq2, eq3, eq4, eq5, eq6, eq7])
+
 
 # ======================
 # ===== SIMULATION =====
 # ======================
 
-calib_dict = {sigma: 1,
-              psi: 0.2,
-              beta: 0.99,
-              kappa: 0.5,
+calib_dict = {sigma: 1.3,
+              varphi: 1,
+              alpha: 0.4,
+              beta: 0.997805,
+              theta: 0.75,
               phi_pi: 1.5,
-              phi_y: 0.5/4,
+              phi_y: 0.2,
               rho_a: 0.9,
-              sigma_a: 0.1,
+              sigma_a: 1.1,
               rho_v: 0.5,
-              sigma_v: 0.0625,
-              sigma_pi: 0.05}
+              sigma_v: 0.3,
+              sigma_pi: 0.8}
 
 obs_matrix = Matrix(np.zeros((3, 7)))
 obs_matrix[0, 0] = 1
@@ -69,18 +73,20 @@ obs_matrix[1, 1] = 1
 obs_matrix[2, 2] = 1
 
 obs_offset = Matrix(np.zeros(3))
-obs_offset[0] = rho
 
-dsge_simul = DSGE(endog, endogl, exog, expec, param, equations, calib_dict, obs_matrix, obs_offset)
+dsge_simul = DSGE(endog, endogl, exog, expec, equations,
+                  calib_dict=calib_dict,
+                  obs_matrix=obs_matrix,
+                  obs_offset=obs_offset)
 print(dsge_simul.eu)
 
-df_obs, df_states = dsge_simul.simulate(n_obs=150, random_seed=1)
+df_obs, df_states = dsge_simul.simulate(n_obs=250, random_seed=1)
 
-df_states = df_states.tail(100)
-df_obs = df_obs.tail(100)
+df_states = df_states.tail(200)
+df_obs = df_obs.tail(200)
 
-# df_states.plot()
-# plt.show()
+df_obs.plot()
+plt.show()
 
 
 # =============================
@@ -89,22 +95,26 @@ df_obs = df_obs.tail(100)
 
 # TODO change prior table to choose mean and std
 # priors
-prior_dict = {sigma:    {'dist': 'gamma',    'param a': 1,     'param b': 1},
-              psi:      {'dist': 'gamma',    'param a': 0.2,     'param b': 1},
-              beta:     {'dist': 'beta',     'param a': 20,    'param b': 2},
-              kappa:    {'dist': 'gamma',    'param a': 0.5,   'param b': 1},
-              phi_pi:   {'dist': 'gamma',    'param a': 1.5,   'param b': 1},
-              phi_y:    {'dist': 'gamma',    'param a': 0.5,     'param b': 1},
-              rho_a:    {'dist': 'beta',     'param a': 2.625, 'param b': 2.625},
-              sigma_a:  {'dist': 'invgamma', 'param a': 3,     'param b': 1},
-              rho_v:    {'dist': 'beta',     'param a': 2.625, 'param b': 2.625},
-              sigma_v:  {'dist': 'invgamma', 'param a': 3,     'param b': 1},
-              sigma_pi: {'dist': 'invgamma', 'param a': 3,     'param b': 1}}
+prior_dict = {sigma:    {'dist': 'normal',   'param a':  1.3, 'param b': 0.20},
+              theta:    {'dist': 'beta',     'param a':  3.0, 'param b': 2.00},
+              phi_pi:   {'dist': 'normal',   'param a':  1.5, 'param b': 0.35},
+              phi_y:    {'dist': 'gamma',    'param a':  6.2, 'param b': 0.04},
+              rho_a:    {'dist': 'beta',     'param a':  1.5, 'param b': 1.50},
+              sigma_a:  {'dist': 'invgamma', 'param a':  6.0, 'param b': 2.50},
+              rho_v:    {'dist': 'beta',     'param a':  1.5, 'param b': 1.50},
+              sigma_v:  {'dist': 'invgamma', 'param a':  6.0, 'param b': 2.50},
+              sigma_pi: {'dist': 'invgamma', 'param a':  6.0, 'param b': 2.50}}
 
-dsge = DSGE(endog, endogl, exog, expec, param, equations, prior_dict=prior_dict,
-            obs_matrix=obs_matrix, obs_data=df_obs, obs_offset=obs_offset)
 
-df_chains, accepted = dsge.estimate(nsim=100, ck=0.001, file_path='snkm.h5')
+dsge = DSGE(endog, endogl, exog, expec, equations,
+            estimate_params=estimate_param,
+            calib_dict=calib_param,
+            obs_matrix=obs_matrix,
+            obs_offset=obs_offset,
+            prior_dict=prior_dict,
+            obs_data=df_obs)
+
+df_chains, accepted = dsge.estimate(nsim=100, ck=0.1, file_path='snkm.h5')
 print(accepted)
 df_chains.plot()
 plt.show()

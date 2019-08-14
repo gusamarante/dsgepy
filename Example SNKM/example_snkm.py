@@ -85,8 +85,8 @@ df_obs, df_states = dsge_simul.simulate(n_obs=250, random_seed=1)
 df_states = df_states.tail(200)
 df_obs = df_obs.tail(200)
 
-df_obs.plot()
-plt.show()
+# df_obs.plot()
+# plt.show()
 
 
 # =============================
@@ -114,7 +114,7 @@ dsge = DSGE(endog, endogl, exog, expec, equations,
             prior_dict=prior_dict,
             obs_data=df_obs)
 
-df_chains, accepted = dsge.estimate(nsim=100, ck=0.1, file_path='snkm.h5')
+df_chains, accepted = dsge.estimate(nsim=1000, ck=0.2, file_path='snkm.h5')
 print(accepted)
 df_chains.plot()
 plt.show()

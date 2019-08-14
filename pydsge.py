@@ -415,11 +415,11 @@ def gensys(g0, g1, c, psi, pi, div=None, realsmall=0.000001):
 
     # Case for no stable roots
     if nunstab == 0:
-        etawt = None
-        ueta = None
-        deta = None
-        veta = None
         bigev = 0
+        etawt = zeros((0, neta))
+        ueta = zeros((0, 0))
+        deta = zeros((0, 0))
+        veta = zeros((neta, 0))
     else:
         ueta, deta, veta = svd(etawt)
         deta = diag(deta)
@@ -437,14 +437,15 @@ def gensys(g0, g1, c, psi, pi, div=None, realsmall=0.000001):
         if len(bigev) >= nunstab:
             eu[0] = 1
     except TypeError:
-        a = 1
+        if bigev >= nunstab:
+            eu[0] = 1
 
     # Case for all stable roots
     if nunstab == n:
-        etawt1 = None
-        ueta1 = None
-        deta1 = None
-        veta1 = None
+        etawt1 = zeros((0, neta))
+        ueta1 = zeros((0, 0))
+        deta1 = zeros((0, 0))
+        veta1 = zeros((neta, 0))
         bigev = 0
     else:
         etawt1 = q1 @ pi
@@ -460,7 +461,7 @@ def gensys(g0, g1, c, psi, pi, div=None, realsmall=0.000001):
         if deta1.ndim == 1:
             deta1 = diag(deta1)
 
-    if veta1 is None:
+    if 0 in veta1.shape:
         unique = True
     else:
         loose = veta1 - veta @ veta.T @ veta1

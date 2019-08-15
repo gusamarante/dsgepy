@@ -114,10 +114,10 @@ dsge = DSGE(endog, endogl, exog, expec, equations,
             prior_dict=prior_dict,
             obs_data=df_obs)
 
-df_chains, accepted = dsge.estimate(nsim=1000, ck=0.2, file_path='snkm.h5')
+df_chains, accepted = dsge.estimate(nsim=100, ck=0.2, file_path='snkm.h5')
 print(accepted)
 df_chains.plot()
 plt.show()
 
-df_chains.astype(float).hist(bins=50)
+df_chains.astype(float).hist(bins=100)
 plt.show()

@@ -18,7 +18,7 @@ warnings.filterwarnings('ignore', category=PerformanceWarning)
 
 class DSGE(object):
 
-    # TODO Estimation
+    # TODO Chain Evaluation
     # TODO impulse response function
     # TODO Forecast error variance
     # TODO Series Forecast

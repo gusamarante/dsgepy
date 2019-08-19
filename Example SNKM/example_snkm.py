@@ -95,15 +95,15 @@ df_obs = df_obs.tail(200)
 
 # TODO change prior table to choose mean and std
 # priors
-prior_dict = {sigma:    {'dist': 'normal',   'param a':  1.3, 'param b': 0.20},
-              theta:    {'dist': 'beta',     'param a':  3.0, 'param b': 2.00},
-              phi_pi:   {'dist': 'normal',   'param a':  1.5, 'param b': 0.35},
-              phi_y:    {'dist': 'gamma',    'param a':  6.2, 'param b': 0.04},
-              rho_a:    {'dist': 'beta',     'param a':  1.5, 'param b': 1.50},
-              sigma_a:  {'dist': 'invgamma', 'param a':  6.0, 'param b': 2.50},
-              rho_v:    {'dist': 'beta',     'param a':  1.5, 'param b': 1.50},
-              sigma_v:  {'dist': 'invgamma', 'param a':  6.0, 'param b': 2.50},
-              sigma_pi: {'dist': 'invgamma', 'param a':  6.0, 'param b': 2.50}}
+prior_dict = {sigma:    {'dist': 'normal',   'param a':  1.3, 'param b': 0.20, 'label': '$\\sigma$'},
+              theta:    {'dist': 'beta',     'param a':  3.0, 'param b': 2.00, 'label': '$\\theta$'},
+              phi_pi:   {'dist': 'normal',   'param a':  1.5, 'param b': 0.35, 'label': '$\\phi_{\\pi}$'},
+              phi_y:    {'dist': 'gamma',    'param a':  6.2, 'param b': 0.04, 'label': '$\\phi_{y}$'},
+              rho_a:    {'dist': 'beta',     'param a':  1.5, 'param b': 1.50, 'label': '$\\rho_a$'},
+              sigma_a:  {'dist': 'invgamma', 'param a':  6.0, 'param b': 2.50, 'label': '$\\sigma_a$'},
+              rho_v:    {'dist': 'beta',     'param a':  1.5, 'param b': 1.50, 'label': '$\\rho_v$'},
+              sigma_v:  {'dist': 'invgamma', 'param a':  6.0, 'param b': 2.50, 'label': '$\\sigma_v$'},
+              sigma_pi: {'dist': 'invgamma', 'param a':  6.0, 'param b': 2.50, 'label': '$\\sigma_{\\pi}$'}}
 
 
 dsge = DSGE(endog, endogl, exog, expec, equations,
@@ -112,12 +112,9 @@ dsge = DSGE(endog, endogl, exog, expec, equations,
             obs_matrix=obs_matrix,
             obs_offset=obs_offset,
             prior_dict=prior_dict,
-            obs_data=df_obs)
+            obs_data=df_obs,
+            verbose=True)
 
-df_chains, accepted = dsge.estimate(nsim=10, ck=0.2, file_path='snkm.h5')
-print(accepted)
-df_chains.plot()
-plt.show()
+dsge.estimate(nsim=5, file_path='snkm.h5')
 
-df_chains.astype(float).hist(bins=100)
-plt.show()
+dsge.eval_chains(burnin=0.3)

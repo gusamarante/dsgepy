@@ -116,7 +116,7 @@ class DSGE(object):
                 print('===== MH jump covariance =====')
                 print(sigmak, '\n')
                 print('===== Eigenvalues of MH jump convariance =====')
-                print(eig(sigmak), '\n')
+                print(eig(sigmak)[0], '\n')
 
             # Optimization - Basinhoping
             # res = basinhopping(obj_func, theta_irr0)

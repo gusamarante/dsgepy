@@ -3,6 +3,7 @@ import pandas as pd
 from tqdm import tqdm
 from sympy import simplify
 from scipy.linalg import qz
+import matplotlib.pyplot as plt
 from pykalman import KalmanFilter
 from numpy.linalg import svd, inv, eig
 from tables import PerformanceWarning
@@ -10,8 +11,8 @@ from scipy.optimize import minimize, basinhopping
 from numpy.random import multivariate_normal, rand, seed
 from numpy import diagonal, vstack, array, eye, where, diag, sqrt, hstack, zeros, \
     arange, exp, log, inf, nan, isnan, isinf, set_printoptions, matrix
-set_printoptions(precision=4, suppress=True, linewidth=150)
 
+set_printoptions(precision=4, suppress=True, linewidth=150)
 warnings.filterwarnings('ignore', category=RuntimeWarning)
 warnings.filterwarnings('ignore', category=PerformanceWarning)
 
@@ -28,12 +29,12 @@ class DSGE(object):
 
     prior_info = None
     has_solution = False
+    chains = None
 
     def __init__(self, endog, endogl, exog, expec, equations, estimate_params=None, calib_dict=None,
-                 obs_matrix=None, obs_offset=None, prior_dict=None, obs_data=None):
+                 obs_matrix=None, obs_offset=None, prior_dict=None, obs_data=None, verbose=False):
 
-        # TODO assert prior info (inv gamma a!=2 and a!=1)
-
+        self.verbose = verbose
         self.endog = endog
         self.endogl = endogl
         self.exog = exog
@@ -108,9 +109,14 @@ class DSGE(object):
             theta_mode_irr = {k: v for k, v in zip(self.params, res.x)}
             theta_mode_res = self._irr2res(theta_mode_irr)
             sigmak = ck * res.hess_inv
-            print(theta_mode_res, '\n')
-            print(sigmak, '\n')
-            print(eig(sigmak), '\n')
+
+            if self.verbose:
+                print('===== Posterior Mode =====')
+                print(theta_mode_res, '\n')
+                print('===== MH jump covariance =====')
+                print(sigmak, '\n')
+                print('===== Eigenvalues of MH jump convariance =====')
+                print(eig(sigmak), '\n')
 
             # Optimization - Basinhoping
             # res = basinhopping(obj_func, theta_irr0)
@@ -130,7 +136,6 @@ class DSGE(object):
         muk = zeros(self.n_param)
         accepted = 0
 
-        # TODO optimize with pymc
         for ii in tqdm(range(start + 1, start+nsim), 'Metropolis-Hastings'):
             theta1 = {k: v for k, v in zip(self.params, df_chains.loc[ii - 1].values)}
             pos1 = self._calc_posterior(theta1)
@@ -159,7 +164,34 @@ class DSGE(object):
         store['sigmak'] = pd.DataFrame(data=sigmak)
         store.close()
 
-        return df_chains, accepted / nsim
+        self.chains = df_chains.astype(float)
+
+        if self.verbose:
+            print('Acceptance rate:', 100 * (accepted / nsim), 'percent')
+
+    def eval_chains(self, burnin=0.3, load_chain=None, show_charts=True):
+        # TODO Prior Density VS Posterior histogram
+        # TODO Table with mean and std from priors and poteriors
+        # TODO Output a model calibrated with posteriors
+        # TODO add latex representations of parameters
+
+        if not (load_chain is None):
+            try:
+                self.chains = pd.read_hdf(load_chain, key='chains')
+            except FileNotFoundError:
+                raise FileNotFoundError('Chain file not found')
+
+        assert not (self.chains is None), 'There are no loaded chains'
+        chain_size = self.chains.shape[0]
+
+        if type(burnin) is float and burnin < 1:
+            df_chains = self.chains.iloc[int(chain_size * burnin):]
+        elif type(burnin) is int and burnin < chain_size:
+            df_chains = self.chains.iloc[burnin + 1:]
+        else:
+            raise ValueError("'burnin' must be either and int smaller than the chain size or a float between 0 and 1")
+
+        self._plot_chains(chains=df_chains, show_charts=show_charts)
 
     def _get_jacobians(self):
         self.Gamma0 = self.equations.jacobian(self.endog)
@@ -352,6 +384,23 @@ class DSGE(object):
                 theta_res[param] = lambda_i
 
         return theta_res
+
+    def _plot_chains(self, chains, show_charts):
+        n_cols = int(self.n_param ** 0.5)
+        n_rows = n_cols + 1 if self.n_param > n_cols ** 2 else n_cols
+        subplot_shape = (n_rows, n_cols)
+
+        plt.figure(figsize=(10*1.61, 10))
+
+        for count, param in enumerate(list(self.params)):
+            ax = plt.subplot2grid(subplot_shape, (count // n_cols, count % n_cols))
+            ax.plot(chains[str(param)], linewidth=0.5, color='darkblue')
+            ax.set_title(self.prior_dict[param]['label'])
+
+        plt.tight_layout()
+
+        if show_charts:
+            plt.show()
 
 
 def gensys(g0, g1, c, psi, pi, div=None, realsmall=0.000001):
@@ -594,11 +643,3 @@ def qzswitch(i, A, B, Q, Z):
     Q[i:i + 2, :] = xy @ Q[i:i + 2, :]
 
     return A, B, Q, Z
-
-
-def evaluate_chains():
-    # TODO Class or function?
-    # TODO Prior Density VS Posterior histogram
-    # TODO Table with mean and std from priors and poteriors
-    # TODO Output a model calibrated with posteriors
-    pass

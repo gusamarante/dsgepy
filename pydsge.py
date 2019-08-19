@@ -125,11 +125,11 @@ class DSGE(object):
             # sigmak = ck * res.hess_inv
 
             # Overrides the result of the optimization
-            theta_mode_res = self.prior_info['mean']
+            # theta_mode_res = self.prior_info['mean']
             # sigmak = ck * eye(self.n_param)
 
             df_chains = pd.DataFrame(columns=[str(p) for p in list(self.params)], index=range(nsim))
-            df_chains.loc[0] = list(theta_mode_res.values)
+            df_chains.loc[0] = list(theta_mode_res.values())
             start = 0
 
         # Metropolis-Hastings
@@ -212,31 +212,39 @@ class DSGE(object):
 
     def _calc_prior(self, theta):
         prior_dict = self.prior_dict
-        df_prior = self.prior_info
+        df_prior = self.prior_info.copy()
         df_prior['pdf'] = nan
 
         for param in prior_dict.keys():
-            a = prior_dict[param]['param a']
-            b = prior_dict[param]['param b']
-            dist = prior_dict[param]['dist'].lower()
+            mu = df_prior.loc[str(param)]['mean']
+            sigma = df_prior.loc[str(param)]['std']
+            dist = df_prior.loc[str(param)]['distribution'].lower()
             theta_i = theta[param]
 
             # since we are goig to take logs, the density function only needs the terms that depend on
             # theta_i, this will help speed up the code a little and will not affect optimization output.
             if dist == 'beta':
+                a = ((mu ** 2) * (1 - mu)) / (sigma ** 2) - mu
+                b = a * mu / (1 - mu)
                 pdf_i = (theta_i**(a - 1)) * ((1 - theta_i)**(b - 1))
 
             elif dist == 'gamma':
+                a = (mu/sigma)**2
+                b = mu/a
                 pdf_i = theta_i**(a - 1) * exp(-theta_i/b)
 
             elif dist == 'invgamma':
+                a = (mu/sigma)**2 + 2
+                b = mu * (a - 1)
                 pdf_i = (theta_i**(- a - 1)) * exp(-b/theta_i)
 
             elif dist == 'uniform':
+                a = mu - sqrt(3) * sigma
+                b = 2 * mu - a
                 pdf_i = 1/(b - a)
 
             else:  # Normal
-                pdf_i = exp(-((theta_i - a)**2)/(2 * (b**2)))
+                pdf_i = exp(-((theta_i - mu)**2)/(2 * (sigma**2)))
 
             df_prior.loc[str(param), 'pdf'] = pdf_i
 
@@ -294,60 +302,56 @@ class DSGE(object):
         return Gamma0, Gamma1, Psi, Pi, C_in, obs_matrix, obs_offset
 
     def _get_prior_info(self):
-        # TODO add distribution column
         prior_info = self.prior_dict
 
         param_names = [str(s) for s in list(self.params)]
 
-        df_prior = pd.DataFrame(columns=['mean', 'std'],
+        df_prior = pd.DataFrame(columns=['distribution', 'mean', 'std', 'param a', 'param b'],
                                 index=param_names)
 
         for param in prior_info.keys():
-            a = prior_info[param]['param a']
-            b = prior_info[param]['param b']
+            mu = prior_info[param]['mean']
+            sigma = prior_info[param]['std']
             dist = prior_info[param]['dist'].lower()
 
             if dist == 'beta':
-                mean_i = a / (a + b)
-                std_i = ((a * b) / (((a + b) ** 2) * (a + b + 1))) ** 0.5
+                a = ((mu ** 2) * (1 - mu)) / (sigma ** 2) - mu
+                b = a * mu / (1 - mu)
 
             elif dist == 'gamma':
-                mean_i = a * b
-                std_i = (a * (b ** 2)) ** 0.5
+                a = (mu / sigma) ** 2
+                b = mu / a
 
             elif dist == 'invgamma':
-                mean_i = b / (a - 1)
-                std_i = ((b ** 2) / (((a - 1) ** 2) * (a - 2))) ** 0.5
+                a = (mu / sigma) ** 2 + 2
+                b = mu * (a - 1)
 
             elif dist == 'uniform':
-                mean_i = (a + b) / 2
-                std_i = (((b - a) ** 2) / 12) ** 0.5
+                a = mu - sqrt(3) * sigma
+                b = 2 * mu - a
 
             else:  # Normal
-                mean_i = a
-                std_i = b
+                a = mu
+                b = sigma
 
-            df_prior.loc[str(param)] = [mean_i, std_i]
+            df_prior.loc[str(param)] = [dist, mu, sigma, a, b]
 
         return df_prior
 
     def _res2irr(self, theta_res):
-        prior_info = self.prior_dict
+        prior_info = self.prior_info
         theta_irr = theta_res.copy()
 
         for param in theta_res.keys():
-            a = prior_info[param]['param a']
-            b = prior_info[param]['param b']
-            dist = prior_info[param]['dist'].lower()
+            a = prior_info.loc[str(param)]['param a']
+            b = prior_info.loc[str(param)]['param b']
+            dist = prior_info.loc[str(param)]['distribution'].lower()
             theta_i = theta_res[param]
 
             if dist == 'beta':
                 theta_irr[param] = log(theta_i / (1 - theta_i))
 
-            elif dist == 'gamma':
-                theta_irr[param] = log(theta_i)
-
-            elif dist == 'invgamma':
+            elif dist == 'gamma' or dist == 'invgamma':
                 theta_irr[param] = log(theta_i)
 
             elif dist == 'uniform':
@@ -359,13 +363,13 @@ class DSGE(object):
         return theta_irr
 
     def _irr2res(self, theta_irr):
-        prior_info = self.prior_dict
+        prior_info = self.prior_info
         theta_res = theta_irr.copy()
 
         for param in theta_irr.keys():
-            a = prior_info[param]['param a']
-            b = prior_info[param]['param b']
-            dist = prior_info[param]['dist'].lower()
+            a = prior_info.loc[str(param)]['param a']
+            b = prior_info.loc[str(param)]['param b']
+            dist = prior_info.loc[str(param)]['distribution'].lower()
             lambda_i = theta_irr[param]
 
             if dist == 'beta':

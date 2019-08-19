@@ -93,17 +93,16 @@ df_obs = df_obs.tail(200)
 # ===== MODEL ESTIMATION  =====
 # =============================
 
-# TODO change prior table to choose mean and std
 # priors
-prior_dict = {sigma:    {'dist': 'normal',   'param a':  1.3, 'param b': 0.20, 'label': '$\\sigma$'},
-              theta:    {'dist': 'beta',     'param a':  3.0, 'param b': 2.00, 'label': '$\\theta$'},
-              phi_pi:   {'dist': 'normal',   'param a':  1.5, 'param b': 0.35, 'label': '$\\phi_{\\pi}$'},
-              phi_y:    {'dist': 'gamma',    'param a':  6.2, 'param b': 0.04, 'label': '$\\phi_{y}$'},
-              rho_a:    {'dist': 'beta',     'param a':  1.5, 'param b': 1.50, 'label': '$\\rho_a$'},
-              sigma_a:  {'dist': 'invgamma', 'param a':  6.0, 'param b': 2.50, 'label': '$\\sigma_a$'},
-              rho_v:    {'dist': 'beta',     'param a':  1.5, 'param b': 1.50, 'label': '$\\rho_v$'},
-              sigma_v:  {'dist': 'invgamma', 'param a':  6.0, 'param b': 2.50, 'label': '$\\sigma_v$'},
-              sigma_pi: {'dist': 'invgamma', 'param a':  6.0, 'param b': 2.50, 'label': '$\\sigma_{\\pi}$'}}
+prior_dict = {sigma:    {'dist': 'normal',   'mean':  1.30, 'std': 0.20, 'label': '$\\sigma$'},
+              theta:    {'dist': 'beta',     'mean':  0.60, 'std': 0.20, 'label': '$\\theta$'},
+              phi_pi:   {'dist': 'normal',   'mean':  1.50, 'std': 0.35, 'label': '$\\phi_{\\pi}$'},
+              phi_y:    {'dist': 'gamma',    'mean':  0.25, 'std': 0.10, 'label': '$\\phi_{y}$'},
+              rho_a:    {'dist': 'beta',     'mean':  0.50, 'std': 0.25, 'label': '$\\rho_a$'},
+              sigma_a:  {'dist': 'invgamma', 'mean':  0.50, 'std': 0.25, 'label': '$\\sigma_a$'},
+              rho_v:    {'dist': 'beta',     'mean':  0.50, 'std': 0.25, 'label': '$\\rho_v$'},
+              sigma_v:  {'dist': 'invgamma', 'mean':  0.50, 'std': 0.25, 'label': '$\\sigma_v$'},
+              sigma_pi: {'dist': 'invgamma', 'mean':  0.50, 'std': 0.25, 'label': '$\\sigma_{\\pi}$'}}
 
 
 dsge = DSGE(endog, endogl, exog, expec, equations,
@@ -115,6 +114,6 @@ dsge = DSGE(endog, endogl, exog, expec, equations,
             obs_data=df_obs,
             verbose=True)
 
-dsge.estimate(nsim=2, file_path='snkm.h5')
+dsge.estimate(nsim=100, file_path='snkm2.h5')
 
 dsge.eval_chains(burnin=0.3)

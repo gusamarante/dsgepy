@@ -114,8 +114,8 @@ dsge = DSGE(endog, endogl, exog, expec, equations,
             obs_data=df_obs,
             verbose=True)
 
-dsge.estimate(nsim=2, file_path='snkm.h5')
+dsge.estimate(nsim=10, file_path='snkm.h5')
 
-dsge.eval_chains(burnin=0)
+dsge.eval_chains(burnin=0, show_charts=True)
 
-print(dsge.posterior_table)
+print(dsge.posterior_table.to_latex(bold_rows=True))

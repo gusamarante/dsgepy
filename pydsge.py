@@ -1,7 +1,7 @@
 import warnings
 import pandas as pd
 from tqdm import tqdm
-from sympy import simplify
+from sympy import simplify, Matrix
 from scipy.linalg import qz
 from scipy.stats import beta, gamma, invgamma, norm, uniform
 import matplotlib.pyplot as plt
@@ -33,8 +33,8 @@ class DSGE(object):
     has_solution = False
     posterior_table = None
 
-    def __init__(self, endog, endogl, exog, expec, equations, estimate_params=None, calib_dict=None,
-                 obs_matrix=None, obs_offset=None, prior_dict=None, obs_data=None, verbose=False):
+    def __init__(self, endog, endogl, exog, expec, state_equations, obs_equations=None, estimate_params=None,
+                 calib_dict=None, prior_dict=None, obs_data=None, verbose=False):
 
         self.verbose = verbose
         self.endog = endog
@@ -42,15 +42,21 @@ class DSGE(object):
         self.exog = exog
         self.expec = expec
         self.params = estimate_params
-        self.equations = equations
-        self.obs_matrix = obs_matrix
-        self.obs_offset = obs_offset
+        self.state_equations = state_equations
+        self.obs_equations = obs_equations
         self.prior_dict = prior_dict
         self.data = obs_data
         self.n_state = len(endog)
+        self.n_obs = len(endog) if obs_equations is None else len(obs_equations)
         self.n_param = None if estimate_params is None else len(estimate_params)
-        self.n_obs = obs_matrix.shape[0]
-        self._get_jacobians()
+
+        # TODO aqui pode vir um check the obs data e obs equations
+        if (obs_equations is None) and (obs_data is None):
+            generate_obs = True
+        else:
+            generate_obs = False
+
+        self._get_jacobians(generate_obs=generate_obs)
 
         if estimate_params is None:
             # If no parameters are going to be estimated, calibrate the whole model
@@ -176,7 +182,7 @@ class DSGE(object):
 
         if not (load_chain is None):
             try:
-                self.chains = pd.read_hdf(load_chain, key='chains')
+                self.chains = pd.read_hdf(load_chain, key='chains').astype(float)
             except FileNotFoundError:
                 raise FileNotFoundError('Chain file not found')
 
@@ -196,16 +202,25 @@ class DSGE(object):
 
         self.posterior_table = self._posterior_table(chains=df_chains)
 
-    def _get_jacobians(self):
-        self.Gamma0 = self.equations.jacobian(self.endog)
-        self.Gamma1 = -self.equations.jacobian(self.endogl)
-        self.Psi = -self.equations.jacobian(self.exog)
-        self.Pi = -self.equations.jacobian(self.expec)
-        self.C_in = simplify(self.equations
+    def _get_jacobians(self, generate_obs):
+        # State Equations
+        self.Gamma0 = self.state_equations.jacobian(self.endog)
+        self.Gamma1 = -self.state_equations.jacobian(self.endogl)
+        self.Psi = -self.state_equations.jacobian(self.exog)
+        self.Pi = -self.state_equations.jacobian(self.expec)
+        self.C_in = simplify(self.state_equations
                              - self.Gamma0 @ self.endog
                              + self.Gamma1 @ self.endogl
                              + self.Psi @ self.exog
                              + self.Pi @ self.expec)
+
+        # Obs Equation
+        if generate_obs:
+            self.obs_matrix = Matrix(eye(self.n_obs))
+            self.obs_offset = Matrix(zeros(self.n_obs))
+        else:
+            self.obs_matrix = self.obs_equations.jacobian(self.endog)
+            self.obs_offset = self.obs_equations - self.obs_matrix @ self.endog
 
     def _calc_posterior(self, theta):
         P = self._calc_prior(theta)
@@ -300,7 +315,6 @@ class DSGE(object):
             # observation matrices
             obs_matrix = self.obs_matrix.subs(theta)
             obs_offset = self.obs_offset.subs(theta)
-
 
         return Gamma0, Gamma1, Psi, Pi, C_in, obs_matrix, obs_offset
 
@@ -410,7 +424,7 @@ class DSGE(object):
             plt.show()
 
     def _plot_prior_posterior(self, chains, show_charts):
-        n_bins = int(1 + 3.322 * log(chains.shape[0]))  # Sturge's Rule
+        n_bins = int(sqrt(chains.shape[0]))
         n_cols = int(self.n_param ** 0.5)
         n_rows = n_cols + 1 if self.n_param > n_cols ** 2 else n_cols
         subplot_shape = (n_rows, n_cols)
@@ -457,6 +471,7 @@ class DSGE(object):
             plt.show()
 
     def _posterior_table(self, chains):
+
         df = self.prior_info[['distribution', 'mean', 'std']]
         df = df.rename({'distribution': 'prior dist', 'mean': 'prior mean', 'std': 'prior std'}, axis=1)
         df['posterior mode'] = chains.mode().mean()

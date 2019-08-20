@@ -1,5 +1,5 @@
 import numpy as np
-from sympy import *
+from sympy import symbols, Matrix
 from pydsge import DSGE
 import matplotlib.pyplot as plt
 
@@ -49,6 +49,13 @@ eq7 = pi - exp_pil - eta_pi
 
 equations = Matrix([eq1, eq2, eq3, eq4, eq5, eq6, eq7])
 
+# observation equation
+obs01 = y
+obs02 = pi
+obs03 = 1/beta - 1 + i
+
+obs_equations = Matrix([obs01, obs02, obs03])
+
 
 # ======================
 # ===== SIMULATION =====
@@ -76,14 +83,13 @@ obs_offset = Matrix(np.zeros(3))
 
 dsge_simul = DSGE(endog, endogl, exog, expec, equations,
                   calib_dict=calib_dict,
-                  obs_matrix=obs_matrix,
-                  obs_offset=obs_offset)
+                  obs_equations=obs_equations)
 print(dsge_simul.eu)
 
 df_obs, df_states = dsge_simul.simulate(n_obs=250, random_seed=1)
 
-df_states = df_states.tail(200)
-df_obs = df_obs.tail(200)
+df_states = df_states.tail(50)
+df_obs = df_obs.tail(50)
 
 # df_obs.plot()
 # plt.show()
@@ -108,14 +114,15 @@ prior_dict = {sigma:    {'dist': 'normal',   'mean':  1.30, 'std': 0.20, 'label'
 dsge = DSGE(endog, endogl, exog, expec, equations,
             estimate_params=estimate_param,
             calib_dict=calib_param,
-            obs_matrix=obs_matrix,
-            obs_offset=obs_offset,
+            obs_equations=obs_equations,
             prior_dict=prior_dict,
             obs_data=df_obs,
             verbose=True)
 
-dsge.estimate(nsim=10, file_path='snkm.h5')
+dsge.estimate(nsim=1000, ck=0.3, file_path='snkm2.h5')
 
 dsge.eval_chains(burnin=0, show_charts=True)
 
-print(dsge.posterior_table.to_latex(bold_rows=True))
+dsge.posterior_table.to_clipboard()
+
+print(dsge.posterior_table)

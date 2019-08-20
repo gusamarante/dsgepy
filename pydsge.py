@@ -26,7 +26,6 @@ class DSGE(object):
     # TODO Forecast error variance
     # TODO Series Forecast
     # TODO Historical Decomposition
-    # TODO Prior Posterior Table in Latex
     # TODO Model Identification (Iskrev's paper)
 
     chains = None

@@ -7,18 +7,10 @@ import matplotlib.pyplot as plt
 # ===== MODEL ESPECIFICATION =====
 # ================================
 # endogenous variables at t
-y, c, i, l, w, r, pi, mc, k, v, rk, tau, x, m, e, cry, q, psi, n, world, T, s, g, pi_focus, \
-exp_c, exp_i, exp_l, exp_pi, exp_rk, exp_e, exp_cry, \
-eps_b, eps_r, eps_m, eps_pi, eps_a, eps_n, eps_x, eps_exp, eps_g, \
-y_lag1, c_lag1, i_lag1, l_lag1, x_lag1, m_lag1, e_lag1, cry_lag1, world_lag1 = \
-    symbols('y, c, i, l, w, r, pi, mc, k, v, rk, tau, x, m, e, cry, q, psi, n, world, T, s, g, pi_focus, '
-            'exp_c, exp_i, exp_l, exp_pi, exp_rk, exp_e, exp_cry, '
-            'eps_b, eps_r, eps_m, eps_pi, eps_a, eps_n, eps_x, eps_exp, eps_g, y_lag1, c_lag1, i_lag1, l_lag1, x_lag1, m_lag1, e_lag1, cry_lag1, world_lag1')
+y, c, i, l, w, r, pi, mc, k, v, rk, tau, x, m, e, cry, q, psi, n, world, T, s, g, pi_focus, exp_c, exp_i, exp_l, exp_pi, exp_rk, exp_e, exp_cry, eps_b, eps_r, eps_m, eps_pi, eps_a, eps_n, eps_x, eps_exp, eps_g, y_lag1, c_lag1, i_lag1, l_lag1, x_lag1, m_lag1, e_lag1, cry_lag1, world_lag1 = \
+    symbols('y, c, i, l, w, r, pi, mc, k, v, rk, tau, x, m, e, cry, q, psi, n, world, T, s, g, pi_focus, exp_c, exp_i, exp_l, exp_pi, exp_rk, exp_e, exp_cry, eps_b, eps_r, eps_m, eps_pi, eps_a, eps_n, eps_x, eps_exp, eps_g, y_lag1, c_lag1, i_lag1, l_lag1, x_lag1, m_lag1, e_lag1, cry_lag1, world_lag1')
 
-endog = Matrix([y, c, i, l, w, r, pi, mc, k, v, rk, tau, x, m, e, cry, q, psi, n, world, T, s, g, pi_focus,
-                exp_c, exp_i, exp_l, exp_pi, exp_rk, exp_e, exp_cry,
-                eps_b, eps_r, eps_m, eps_pi, eps_a, eps_n, eps_x, eps_exp, eps_g, y_lag1, c_lag1, i_lag1, l_lag1,
-                x_lag1, m_lag1, e_lag1, cry_lag1, world_lag1])
+endog = Matrix([y, c, i, l, w, r, pi, mc, k, v, rk, tau, x, m, e, cry, q, psi, n, world, T, s, g, pi_focus, exp_c, exp_i, exp_l, exp_pi, exp_rk, exp_e, exp_cry, eps_b, eps_r, eps_m, eps_pi, eps_a, eps_n, eps_x, eps_exp, eps_g, y_lag1, c_lag1, i_lag1, l_lag1, x_lag1, m_lag1, e_lag1, cry_lag1, world_lag1])
 
 # endogenous variables at t - 1
 yl, cl, il, ll, wl, rl, pil, mcl, kl, vl, rkl, taul, xl, ml, el, cryl, ql, psil, nl, worldl, Tl, sl, gl, pi_focusl, \

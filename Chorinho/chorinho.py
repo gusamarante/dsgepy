@@ -233,8 +233,8 @@ prior_dict = {sigma_c:       {'dist': 'normal',   'mean': 1.50, 'std': 0.50, 'la
               sigma_world:   {'dist': 'invgamma', 'mean': 0.10, 'std': 2.00, 'label': '$\\sigma_{world}$'},
               sigma_tau:     {'dist': 'invgamma', 'mean': 0.10, 'std': 2.00, 'label': '$\\sigma_{tau}$'},
               sigma_s:       {'dist': 'invgamma', 'mean': 0.10, 'std': 2.00, 'label': '$\\sigma_{s}$'},
-              sigma_employ:  {'dist': 'normal', 'mean': 1.50, 'std': 0.50, 'label': '$\\sigma_{employ}$'},
-              sigma_durable: {'dist': 'normal', 'mean': 0.20, 'std': 0.20, 'label': '$\\sigma_{durable}$'}}
+              sigma_employ:  {'dist': 'normal',   'mean': 1.50, 'std': 0.50, 'label': '$\\sigma_{employ}$'},
+              sigma_durable: {'dist': 'normal',   'mean': 0.20, 'std': 0.20, 'label': '$\\sigma_{durable}$'}}
 
 dsge = DSGE(endog, endogl, exog, expec, state_equations,
             estimate_params=estimate_param,

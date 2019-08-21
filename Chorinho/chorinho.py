@@ -9,18 +9,19 @@ import matplotlib.pyplot as plt
 # endogenous variables at t
 y, c, i, l, w, r, pi, mc, k, v, rk, tau, x, m, e, cry, q, psi, n, world, T, s, g, pi_focus, \
 exp_c, exp_i, exp_l, exp_pi, exp_rk, exp_e, exp_cry, \
-eps_b, eps_r, eps_m, eps_pi, eps_a, eps_n, eps_x, eps_exp, eps_g,\
-    y_lag1, c_lag1, i_lag1, l_lag1, x_lag1, m_lag1, e_lag1, cry_lag1, world_lag1 = \
+eps_b, eps_r, eps_m, eps_pi, eps_a, eps_n, eps_x, eps_exp, eps_g, \
+y_lag1, c_lag1, i_lag1, l_lag1, x_lag1, m_lag1, e_lag1, cry_lag1, world_lag1 = \
     symbols('y, c, i, l, w, r, pi, mc, k, v, rk, tau, x, m, e, cry, q, psi, n, world, T, s, g, pi_focus, '
             'exp_c, exp_i, exp_l, exp_pi, exp_rk, exp_e, exp_cry, '
             'eps_b, eps_r, eps_m, eps_pi, eps_a, eps_n, eps_x, eps_exp, eps_g, y_lag1, c_lag1, i_lag1, l_lag1, x_lag1, m_lag1, e_lag1, cry_lag1, world_lag1')
 
 endog = Matrix([y, c, i, l, w, r, pi, mc, k, v, rk, tau, x, m, e, cry, q, psi, n, world, T, s, g, pi_focus,
                 exp_c, exp_i, exp_l, exp_pi, exp_rk, exp_e, exp_cry,
-                eps_b, eps_r, eps_m, eps_pi, eps_a, eps_n, eps_x, eps_exp, eps_g, y_lag1, c_lag1, i_lag1, l_lag1, x_lag1, m_lag1, e_lag1, cry_lag1, world_lag1])
+                eps_b, eps_r, eps_m, eps_pi, eps_a, eps_n, eps_x, eps_exp, eps_g, y_lag1, c_lag1, i_lag1, l_lag1,
+                x_lag1, m_lag1, e_lag1, cry_lag1, world_lag1])
 
 # endogenous variables at t - 1
-yl, cl, il, ll, wl, rl, pil, mcl, kl, vl, rkl, taul, xl, ml, el, cryl, ql, psil, nl, worldl, Tl, sl, gl, pi_focusl,\
+yl, cl, il, ll, wl, rl, pil, mcl, kl, vl, rkl, taul, xl, ml, el, cryl, ql, psil, nl, worldl, Tl, sl, gl, pi_focusl, \
 exp_cl, exp_il, exp_ll, exp_pil, exp_rkl, exp_el, exp_cryl, \
 eps_bl, eps_rl, eps_ml, eps_pil, eps_al, eps_nl, eps_xl, eps_expl, eps_gl, \
 y_lag1l, c_lag1l, i_lag1l, l_lag1l, x_lag1l, m_lag1l, e_lag1l, cry_lag1l, world_lag1l = \
@@ -30,7 +31,8 @@ y_lag1l, c_lag1l, i_lag1l, l_lag1l, x_lag1l, m_lag1l, e_lag1l, cry_lag1l, world_
 
 endogl = Matrix([yl, cl, il, ll, wl, rl, pil, mcl, kl, vl, rkl, taul, xl, ml, el, cryl, ql, psil, nl, worldl,
                  Tl, sl, gl, pi_focusl, exp_cl, exp_il, exp_ll, exp_pil, exp_rkl, exp_el, exp_cryl,
-                 eps_bl, eps_rl, eps_ml, eps_pil, eps_al, eps_nl, eps_xl, eps_expl, eps_gl, y_lag1l, c_lag1l, i_lag1l, l_lag1l, x_lag1l, m_lag1l, e_lag1l, cry_lag1l, world_lag1l])
+                 eps_bl, eps_rl, eps_ml, eps_pil, eps_al, eps_nl, eps_xl, eps_expl, eps_gl, y_lag1l, c_lag1l, i_lag1l,
+                 l_lag1l, x_lag1l, m_lag1l, e_lag1l, cry_lag1l, world_lag1l])
 
 # exogenous shocks
 xi_b, xi_a, xi_g, xi_r, xi_pi, xi_n, xi_x, xi_m, xi_exp, xi_e, xi_cry, xi_world, xi_tau, xi_s = \
@@ -57,16 +59,6 @@ sigma_cry, sigma_world, sigma_tau, sigma_s, sigma_employ, sigma_durable = \
             'm_ss, rho_b, rho_a, rho_g, rho_r, rho_pi, rho_n, rho_x, rho_m, rho_exp, rho_e1, rho_e2, rho_cry, '
             'rho_world, rho_tau, rho_s, sigma_b, sigma_a, sigma_g, sigma_r, sigma_pi, sigma_n, sigma_x, sigma_m, '
             'sigma_exp, sigma_e, sigma_cry, sigma_world, sigma_tau, sigma_s, sigma_employ, sigma_durable')
-
-estimate_param = Matrix([sigma_c, sigma_h, sigma_l, beta, theta_lag, theta_mc, theta_e, theta_cry, alpha, varphi,
-                         delta, chi_s, chi_n, gamma_r, gamma_pi, gamma_exp_pi, gamma_y, theta_back, theta_forw,
-                         kappa_world, kappa_e, kappa_cry, mu_c, mu_i, mu_cry, c_ss, w_ss, l_ss, rk_ss, tau_ss,
-                         kn_ss, g_ss, i_ss, x_ss, m_ss, rho_b, rho_a, rho_g, rho_r, rho_pi, rho_n, rho_x, rho_m,
-                         rho_exp, rho_e1, rho_e2, rho_cry, rho_world, rho_tau, rho_s, sigma_b, sigma_a, sigma_g,
-                         sigma_r, sigma_pi, sigma_n, sigma_x, sigma_m, sigma_exp, sigma_e, sigma_cry,
-                         sigma_world, sigma_tau, sigma_s, sigma_employ, sigma_durable])
-calib_param = {}  # TODO
-
 
 # ===== model equations =====
 # equilibrium conditions
@@ -147,14 +139,13 @@ eq46 = e_lag1 - el
 eq47 = cry_lag1 - cryl
 eq48 = world_lag1 - worldl
 
-equations = Matrix([eval('eq' + str(n).zfill(2)) for n in range(1, 49)])
-
+state_equations = Matrix([eval('eq' + str(n).zfill(2)) for n in range(1, 49)])
 
 # Observation Matrix
 obs01 = y - y_lag1
-obs02 = c - c_lag1
+obs02 = (1 - sigma_durable) * (c - cry_lag1) + sigma_durable * (i - i_lag1)
 obs03 = i - i_lag1
-obs04 = (1/sigma_employ)*(l - l_lag1)
+obs04 = (1 / sigma_employ) * (l - l_lag1)
 obs05 = r
 obs06 = pi
 obs07 = x - x_lag1
@@ -166,4 +157,89 @@ obs12 = s
 obs13 = tau
 obs14 = world - world_lag1
 
-obs_equations = Matrix([])
+obs_equations = Matrix([[eval('obs' + str(n).zfill(2)) for n in range(1, 14)]])
+
+# =============================
+# ===== MODEL ESTIMATION  =====
+# =============================
+
+# calibrated parameters
+calib_param = {delta: 0.025, g_ss: 0.2, x_ss: 0.14, m_ss: 0.13, kn_ss: 1.2, chi_n: 0.99}
+estimate_param = Matrix([sigma_c, sigma_h, sigma_l, beta, theta_lag, theta_mc, theta_e, theta_cry, alpha,
+                         varphi, chi_s, gamma_r, gamma_pi, gamma_exp_pi, gamma_y, theta_back, theta_forw,
+                         kappa_world, kappa_e, kappa_cry, mu_c, mu_i, mu_cry, c_ss, w_ss, l_ss, rk_ss, tau_ss,
+                         i_ss, rho_b, rho_a, rho_g, rho_r, rho_pi, rho_n, rho_x, rho_m, rho_exp, rho_e1, rho_e2,
+                         rho_cry, rho_world, rho_tau, rho_s, sigma_b, sigma_a, sigma_g, sigma_r, sigma_pi,
+                         sigma_n, sigma_x, sigma_m, sigma_exp, sigma_e, sigma_cry, sigma_world, sigma_tau,
+                         sigma_s, sigma_employ, sigma_durable])
+#
+
+# priors
+prior_dict = {sigma_c:       {'dist': 'normal',   'mean': 1.50, 'std': 0.50, 'label': '$\\sigma_{c}$'},
+              sigma_h:       {'dist': 'beta',     'mean': 0.70, 'std': 0.10, 'label': '$\\sigma_{h}$'},
+              sigma_l:       {'dist': 'normal',   'mean': 2.00, 'std': 0.50, 'label': '$\\sigma_{l}$'},
+              beta:          {'dist': 'beta',     'mean': 0.99, 'std': 0.05, 'label': '$\\beta$'},
+              theta_lag:     {'dist': 'beta',     'mean': 0.50, 'std': 0.10, 'label': '$\\theta_{lag}$'},
+              theta_mc:      {'dist': 'normal',   'mean': 0.10, 'std': 0.20, 'label': '$\\theta_{mc}$'},
+              theta_e:       {'dist': 'normal',   'mean': 0.10, 'std': 0.20, 'label': '$\\theta_{e}$'},
+              theta_cry:     {'dist': 'normal',   'mean': 0.10, 'std': 0.20, 'label': '$\\theta_{cry}$'},
+              alpha:         {'dist': 'normal',   'mean': 0.30, 'std': 0.05, 'label': '$\\alpha$'},
+              varphi:        {'dist': 'normal',   'mean': 4.00, 'std': 1.50, 'label': '$\\varphi$'},
+              chi_s:         {'dist': 'normal',   'mean': 0.10, 'std': 0.20, 'label': '$\\chi_{s}$'},
+              gamma_r:       {'dist': 'beta',     'mean': 0.75, 'std': 0.10, 'label': '$\\gamma_{r}$'},
+              gamma_pi:      {'dist': 'normal',   'mean': 1.50, 'std': 0.20, 'label': '$\\gamma_{pi}$'},
+              gamma_exp_pi:  {'dist': 'normal',   'mean': 5.00, 'std': 3.00, 'label': '$\\gamma_{exp}$'},
+              gamma_y:       {'dist': 'normal',   'mean': 0.12, 'std': 0.05, 'label': '$\\gamma_{y}$'},
+              theta_back:    {'dist': 'normal',   'mean': 0.10, 'std': 0.20, 'label': '$\\theta_{back}$'},
+              theta_forw:    {'dist': 'normal',   'mean': 0.10, 'std': 0.20, 'label': '$\\theta_{forw}$'},
+              kappa_world:   {'dist': 'normal',   'mean': 1.00, 'std': 0.50, 'label': '$\\kappa_{world}$'},
+              kappa_e:       {'dist': 'normal',   'mean': 0.10, 'std': 0.20, 'label': '$\\kappa_{e}$'},
+              kappa_cry:     {'dist': 'normal',   'mean': 0.10, 'std': 0.20, 'label': '$\\kappa_{cry}$'},
+              mu_c:          {'dist': 'normal',   'mean': 0.10, 'std': 0.20, 'label': '$\\mu_{c}'},
+              mu_i:          {'dist': 'normal',   'mean': 0.10, 'std': 0.20, 'label': '$\\mu_{i}'},
+              mu_cry:        {'dist': 'normal',   'mean': 0.10, 'std': 0.20, 'label': '$\\mu_{cry}'},
+              c_ss:          {'dist': 'normal',   'mean': 0.62, 'std': 0.02, 'label': '$c^{\\star}$'},
+              w_ss:          {'dist': 'normal',   'mean': 7.00, 'std': 2.00, 'label': '$w^{\\star}$'},
+              l_ss:          {'dist': 'normal',   'mean': 2.50, 'std': 0.50, 'label': '$l^{\\star}$'},
+              rk_ss:         {'dist': 'normal',   'mean': 0.11, 'std': 0.15, 'label': '$r_{k}^{\\star}$'},
+              tau_ss:        {'dist': 'normal',   'mean': 0.30, 'std': 0.20, 'label': '$\\tau^{\\star}$'},
+              i_ss:          {'dist': 'normal',   'mean': 0.19, 'std': 0.05, 'label': '$i^{\\star}$'},
+              rho_b:         {'dist': 'beta',     'mean': 0.50, 'std': 0.20, 'label': '$\\rho_{b}$'},
+              rho_a:         {'dist': 'beta',     'mean': 0.50, 'std': 0.20, 'label': '$\\rho_{a}$'},
+              rho_g:         {'dist': 'beta',     'mean': 0.50, 'std': 0.20, 'label': '$\\rho_{g}$'},
+              rho_r:         {'dist': 'beta',     'mean': 0.50, 'std': 0.20, 'label': '$\\rho_{r}$'},
+              rho_pi:        {'dist': 'beta',     'mean': 0.50, 'std': 0.20, 'label': '$\\rho_{\\pi}$'},
+              rho_n:         {'dist': 'beta',     'mean': 0.50, 'std': 0.20, 'label': '$\\rho_{n}$'},
+              rho_x:         {'dist': 'beta',     'mean': 0.50, 'std': 0.20, 'label': '$\\rho_{x}$'},
+              rho_m:         {'dist': 'beta',     'mean': 0.50, 'std': 0.20, 'label': '$\\rho_{m}$'},
+              rho_exp:       {'dist': 'beta',     'mean': 0.50, 'std': 0.20, 'label': '$\\rho_{exp}$'},
+              rho_e1:        {'dist': 'beta',     'mean': 0.50, 'std': 0.20, 'label': '$\\rho_{e1}$'},
+              rho_e2:        {'dist': 'beta',     'mean': 0.50, 'std': 0.20, 'label': '$\\rho_{e2}$'},
+              rho_cry:       {'dist': 'beta',     'mean': 0.50, 'std': 0.20, 'label': '$\\rho_{cry}$'},
+              rho_world:     {'dist': 'beta',     'mean': 0.50, 'std': 0.20, 'label': '$\\rho_{world}$'},
+              rho_tau:       {'dist': 'beta',     'mean': 0.50, 'std': 0.20, 'label': '$\\rho_{\\tau}$'},
+              rho_s:         {'dist': 'beta',     'mean': 0.50, 'std': 0.20, 'label': '$\\rho_{s}$'},
+              sigma_b:       {'dist': 'invgamma', 'mean': 0.10, 'std': 2.00, 'label': '$\\sigma_{b}$'},
+              sigma_a:       {'dist': 'invgamma', 'mean': 0.10, 'std': 2.00, 'label': '$\\sigma_{a}$'},
+              sigma_g:       {'dist': 'invgamma', 'mean': 0.10, 'std': 2.00, 'label': '$\\sigma_{g}$'},
+              sigma_r:       {'dist': 'invgamma', 'mean': 0.10, 'std': 2.00, 'label': '$\\sigma_{r}$'},
+              sigma_pi:      {'dist': 'invgamma', 'mean': 0.10, 'std': 2.00, 'label': '$\\sigma_{\\pi}$'},
+              sigma_n:       {'dist': 'invgamma', 'mean': 0.10, 'std': 2.00, 'label': '$\\sigma_{n}$'},
+              sigma_x:       {'dist': 'invgamma', 'mean': 0.10, 'std': 2.00, 'label': '$\\sigma_{x}$'},
+              sigma_m:       {'dist': 'invgamma', 'mean': 0.10, 'std': 2.00, 'label': '$\\sigma_{m}$'},
+              sigma_exp:     {'dist': 'invgamma', 'mean': 0.10, 'std': 2.00, 'label': '$\\sigma_{exp}$'},
+              sigma_e:       {'dist': 'invgamma', 'mean': 0.10, 'std': 2.00, 'label': '$\\sigma_{e}$'},
+              sigma_cry:     {'dist': 'invgamma', 'mean': 0.10, 'std': 2.00, 'label': '$\\sigma_{cry}$'},
+              sigma_world:   {'dist': 'invgamma', 'mean': 0.10, 'std': 2.00, 'label': '$\\sigma_{world}$'},
+              sigma_tau:     {'dist': 'invgamma', 'mean': 0.10, 'std': 2.00, 'label': '$\\sigma_{tau}$'},
+              sigma_s:       {'dist': 'invgamma', 'mean': 0.10, 'std': 2.00, 'label': '$\\sigma_{s}$'},
+              sigma_employ:  {'dist': 'normal', 'mean': 1.50, 'std': 0.50, 'label': '$\\sigma_{employ}$'},
+              sigma_durable: {'dist': 'normal', 'mean': 0.20, 'std': 0.20, 'label': '$\\sigma_{durable}$'}}
+
+dsge = DSGE(endog, endogl, exog, expec, state_equations,
+            estimate_params=estimate_param,
+            calib_dict=calib_param,
+            obs_equations=obs_equations,
+            prior_dict=prior_dict,
+            obs_data=df_obs,
+            verbose=True)

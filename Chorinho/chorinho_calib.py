@@ -7,22 +7,22 @@ import matplotlib.pyplot as plt
 # ===== MODEL ESPECIFICATION =====
 # ================================
 # endogenous variables at t
-y, c, i, l, w, r, pi, mc, k, v, rk, tau, x, m, e, cry, q, psi, n, world, T, s, g, pi_focus, exp_c, exp_i, exp_l, exp_pi, exp_rk, exp_e, exp_cry, eps_b, eps_r, eps_m, eps_pi, eps_a, eps_n, eps_x, eps_exp, eps_g, y_lag1, c_lag1, i_lag1, l_lag1, x_lag1, m_lag1, e_lag1, cry_lag1, world_lag1 = \
-    symbols('y, c, i, l, w, r, pi, mc, k, v, rk, tau, x, m, e, cry, q, psi, n, world, T, s, g, pi_focus, exp_c, exp_i, exp_l, exp_pi, exp_rk, exp_e, exp_cry, eps_b, eps_r, eps_m, eps_pi, eps_a, eps_n, eps_x, eps_exp, eps_g, y_lag1, c_lag1, i_lag1, l_lag1, x_lag1, m_lag1, e_lag1, cry_lag1, world_lag1')
+y, c, i, l, w, r, pi, mc, k, v, rk, tau, x, m, e, cry, q, psi, n, world, T, s, g, pi_focus, exp_c, exp_i, exp_l, exp_pi, exp_rk, exp_e, exp_cry, exp_q, exp_v, exp_tau, eps_b, eps_r, eps_m, eps_pi, eps_a, eps_n, eps_x, eps_exp, eps_g, y_lag1, c_lag1, i_lag1, l_lag1, x_lag1, m_lag1, e_lag1, cry_lag1, world_lag1 = \
+    symbols('y, c, i, l, w, r, pi, mc, k, v, rk, tau, x, m, e, cry, q, psi, n, world, T, s, g, pi_focus, exp_c, exp_i, exp_l, exp_pi, exp_rk, exp_e, exp_cry, exp_q, exp_v, exp_tau, eps_b, eps_r, eps_m, eps_pi, eps_a, eps_n, eps_x, eps_exp, eps_g, y_lag1, c_lag1, i_lag1, l_lag1, x_lag1, m_lag1, e_lag1, cry_lag1, world_lag1')
 
-endog = Matrix([y, c, i, l, w, r, pi, mc, k, v, rk, tau, x, m, e, cry, q, psi, n, world, T, s, g, pi_focus, exp_c, exp_i, exp_l, exp_pi, exp_rk, exp_e, exp_cry, eps_b, eps_r, eps_m, eps_pi, eps_a, eps_n, eps_x, eps_exp, eps_g, y_lag1, c_lag1, i_lag1, l_lag1, x_lag1, m_lag1, e_lag1, cry_lag1, world_lag1])
+endog = Matrix([y, c, i, l, w, r, pi, mc, k, v, rk, tau, x, m, e, cry, q, psi, n, world, T, s, g, pi_focus, exp_c, exp_i, exp_l, exp_pi, exp_rk, exp_e, exp_cry, exp_q, exp_v, exp_tau, eps_b, eps_r, eps_m, eps_pi, eps_a, eps_n, eps_x, eps_exp, eps_g, y_lag1, c_lag1, i_lag1, l_lag1, x_lag1, m_lag1, e_lag1, cry_lag1, world_lag1])
 
 # endogenous variables at t - 1
 yl, cl, il, ll, wl, rl, pil, mcl, kl, vl, rkl, taul, xl, ml, el, cryl, ql, psil, nl, worldl, Tl, sl, gl, pi_focusl, \
-exp_cl, exp_il, exp_ll, exp_pil, exp_rkl, exp_el, exp_cryl, \
+exp_cl, exp_il, exp_ll, exp_pil, exp_rkl, exp_el, exp_cryl, exp_ql, exp_vl, exp_taul, \
 eps_bl, eps_rl, eps_ml, eps_pil, eps_al, eps_nl, eps_xl, eps_expl, eps_gl, \
 y_lag1l, c_lag1l, i_lag1l, l_lag1l, x_lag1l, m_lag1l, e_lag1l, cry_lag1l, world_lag1l = \
     symbols('yl, cl, il, ll, wl, rl, pil, mcl, kl, vl, rkl, taul, xl, ml, el, cryl, ql, psil, nl, worldl, Tl, '
-            'sl, gl, pi_focusl, exp_cl, exp_il, exp_ll, exp_pil, exp_rkl, exp_el, exp_cryl, '
+            'sl, gl, pi_focusl, exp_cl, exp_il, exp_ll, exp_pil, exp_rkl, exp_el, exp_cryl, exp_ql, exp_vl, exp_taul, '
             'eps_bl, eps_rl, eps_ml, eps_pil, eps_al, eps_nl, eps_xl, eps_expl, eps_gl, y_lag1l, c_lag1l, i_lag1l, l_lag1l, x_lag1l, m_lag1l, e_lag1l, cry_lag1l, world_lag1l')
 
 endogl = Matrix([yl, cl, il, ll, wl, rl, pil, mcl, kl, vl, rkl, taul, xl, ml, el, cryl, ql, psil, nl, worldl,
-                 Tl, sl, gl, pi_focusl, exp_cl, exp_il, exp_ll, exp_pil, exp_rkl, exp_el, exp_cryl,
+                 Tl, sl, gl, pi_focusl, exp_cl, exp_il, exp_ll, exp_pil, exp_rkl, exp_el, exp_cryl, exp_ql, exp_vl, exp_taul,
                  eps_bl, eps_rl, eps_ml, eps_pil, eps_al, eps_nl, eps_xl, eps_expl, eps_gl, y_lag1l, c_lag1l, i_lag1l,
                  l_lag1l, x_lag1l, m_lag1l, e_lag1l, cry_lag1l, world_lag1l])
 
@@ -33,10 +33,10 @@ xi_b, xi_a, xi_g, xi_r, xi_pi, xi_n, xi_x, xi_m, xi_exp, xi_e, xi_cry, xi_world,
 exog = Matrix([xi_b, xi_a, xi_g, xi_r, xi_pi, xi_n, xi_x, xi_m, xi_exp, xi_e, xi_cry, xi_world, xi_tau, xi_s])
 
 # expectational shocks
-eta_c, eta_i, eta_l, eta_pi, eta_rk, eta_e, eta_cry = \
-    symbols('eta_c, eta_i, eta_l, eta_pi, eta_rk, eta_e, eta_cry')
+eta_c, eta_i, eta_l, eta_pi, eta_rk, eta_e, eta_cry, eta_q, eta_v, eta_tau = \
+    symbols('eta_c, eta_i, eta_l, eta_pi, eta_rk, eta_e, eta_cry, eta_q, eta_v, eta_tau')
 
-expec = Matrix([eta_c, eta_i, eta_l, eta_pi, eta_rk, eta_e, eta_cry])
+expec = Matrix([eta_c, eta_i, eta_l, eta_pi, eta_rk, eta_e, eta_cry, eta_q, eta_v, eta_tau])
 
 # parameters
 sigma_c, sigma_h, sigma_l, beta, theta_lag, theta_mc, theta_e, theta_cry, alpha, varphi, delta, chi_s, chi_n, \
@@ -44,13 +44,13 @@ gamma_r, gamma_pi, gamma_exp_pi, gamma_y, theta_back, theta_forw, kappa_world, k
 mu_c, mu_i, mu_cry, c_ss, w_ss, l_ss, rk_ss, tau_ss, kn_ss, g_ss, i_ss, x_ss, m_ss, \
 rho_b, rho_a, rho_g, rho_r, rho_pi, rho_n, rho_x, rho_m, rho_exp, rho_e1, rho_e2, rho_cry, rho_world, \
 rho_tau, rho_s, sigma_b, sigma_a, sigma_g, sigma_r, sigma_pi, sigma_n, sigma_x, sigma_m, sigma_exp, sigma_e, \
-sigma_cry, sigma_world, sigma_tau, sigma_s, sigma_employ, sigma_durable = \
+sigma_cry, sigma_world, sigma_tau, sigma_s, sigma_employ, sigma_durable, chi_q = \
     symbols('sigma_c, sigma_h, sigma_l, beta, theta_lag, theta_mc, theta_e, theta_cry, alpha, varphi, delta, '
             'chi_s, chi_n, gamma_r, gamma_pi, gamma_exp_pi, gamma_y, theta_back, theta_forw, kappa_world, '
             'kappa_e, kappa_cry, mu_c, mu_i, mu_cry, c_ss, w_ss, l_ss, rk_ss, tau_ss, kn_ss, g_ss, i_ss, x_ss, '
             'm_ss, rho_b, rho_a, rho_g, rho_r, rho_pi, rho_n, rho_x, rho_m, rho_exp, rho_e1, rho_e2, rho_cry, '
             'rho_world, rho_tau, rho_s, sigma_b, sigma_a, sigma_g, sigma_r, sigma_pi, sigma_n, sigma_x, sigma_m, '
-            'sigma_exp, sigma_e, sigma_cry, sigma_world, sigma_tau, sigma_s, sigma_employ, sigma_durable')
+            'sigma_exp, sigma_e, sigma_cry, sigma_world, sigma_tau, sigma_s, sigma_employ, sigma_durable, chi_q')
 
 # ===== model equations =====
 # equilibrium conditions
@@ -76,8 +76,8 @@ eq08 = - i + (1 / (1 + beta)) * il + (beta / (1 + beta)) * exp_i + (1 / (varphi 
 
 eq09 = - k + (1 - delta) * kl + delta * il
 
-eq10 = - rk + ((1 - delta) / (rk_ss + 1 - delta)) * q + (rk_ss / (rk_ss + 1 - delta)) * (
-        v - (1 / (1 - tau_ss)) * tau) - ql
+eq10 = - exp_rk + ((1 - delta) / (rk_ss + 1 - delta)) * exp_q + (rk_ss / (rk_ss + 1 - delta)) * (
+        exp_v - (1 / (1 - tau_ss)) * exp_tau) - ql
 
 eq11 = - psi + exp_rk - (r - exp_pi)
 
@@ -110,6 +110,7 @@ eq29 = - cry + rho_cry * cryl + xi_cry
 eq30 = - world + rho_world * worldl + xi_world
 eq31 = -tau + rho_tau * taul + xi_tau
 eq32 = -s + rho_s * sl + xi_s
+eqteste = - q + chi_q * (i - k)
 
 # expectational errors
 eq33 = c - exp_cl - eta_c
@@ -119,19 +120,23 @@ eq36 = pi - exp_pil - eta_pi
 eq37 = rk - exp_rkl - eta_rk
 eq38 = e - exp_el - eta_e
 eq39 = cry - exp_cryl - eta_cry
+eq40 = q - exp_ql - eta_q
+eq41 = v - exp_vl - eta_v
+eq42 = tau - exp_taul - eta_tau
+
 
 # Auxiliar for obs equation
-eq40 = y_lag1 - yl
-eq41 = c_lag1 - cl
-eq42 = i_lag1 - il
-eq43 = l_lag1 - ll
-eq44 = x_lag1 - xl
-eq45 = m_lag1 - ml
-eq46 = e_lag1 - el
-eq47 = cry_lag1 - cryl
-eq48 = world_lag1 - worldl
+eq43 = y_lag1 - yl
+eq44 = c_lag1 - cl
+eq45 = i_lag1 - il
+eq46 = l_lag1 - ll
+eq47 = x_lag1 - xl
+eq48 = m_lag1 - ml
+eq49 = e_lag1 - el
+eq50 = cry_lag1 - cryl
+eq51 = world_lag1 - worldl
 
-state_equations = Matrix([eval('eq' + str(n).zfill(2)) for n in range(1, 49)])
+state_equations = Matrix([eval('eq' + str(n).zfill(2)) for n in range(1, 52)] + [eval('eqteste')])
 
 # Observation Matrix
 obs01 = y - y_lag1
@@ -174,7 +179,7 @@ calib_param = {delta: 0.025,
                varphi: 3.6,
                chi_s: 0.34,
                gamma_r: 0.79,
-               gamma_pi: 0.77,  # very weird
+               gamma_pi: 1.5,  # very weird
                gamma_exp_pi: 3.3,
                gamma_y: 0.15,
                theta_back: 0.14,
@@ -221,7 +226,8 @@ calib_param = {delta: 0.025,
                sigma_tau: 0.1,
                sigma_s: 0.1,
                sigma_employ: 2.6,
-               sigma_durable: 0.05}
+               sigma_durable: 0.05,
+               chi_q: 1}
 
 dsge = DSGE(endog, endogl, exog, expec, state_equations, obs_equations,
             calib_dict=calib_param, verbose=True)

@@ -74,11 +74,6 @@ calib_dict = {sigma: 1.3,
               sigma_v: 0.3,
               sigma_pi: 0.8}
 
-obs_matrix = Matrix(np.zeros((3, 7)))
-obs_matrix[0, 0] = 1
-obs_matrix[1, 1] = 1
-obs_matrix[2, 2] = 1
-
 obs_offset = Matrix(np.zeros(3))
 
 dsge_simul = DSGE(endog, endogl, exog, expec, equations,

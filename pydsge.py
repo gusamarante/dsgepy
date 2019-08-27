@@ -27,6 +27,7 @@ class DSGE(object):
     # TODO Series Forecast
     # TODO Historical Decomposition
     # TODO Model Identification (Iskrev's paper)
+    # TODO Add csminwel as an optimization method
 
     chains = None
     prior_info = None

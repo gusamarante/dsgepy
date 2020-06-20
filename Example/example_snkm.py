@@ -32,7 +32,7 @@ sigma, varphi, alpha, beta, theta, phi_pi, phi_y, rho_a, sigma_a, rho_v, sigma_v
     symbols('sigma, varphi, alpha, beta, theta, phi_pi, phi_y, rho_a, sigma_a, rho_v, sigma_v, sigma_pi')
 
 estimate_param = Matrix([sigma, theta, phi_pi, phi_y, rho_a, sigma_a, rho_v, sigma_v, sigma_pi])
-calib_param = {varphi: 1, alpha:0.4, beta: 0.997805}
+calib_param = {varphi: 1, alpha: 0.4, beta: 0.997805}
 
 # Summary parameters
 psi_nya = (1 + varphi) / (sigma*(1-alpha) + varphi + alpha)
@@ -86,8 +86,8 @@ df_obs, df_states = dsge_simul.simulate(n_obs=250, random_seed=1)
 df_states = df_states.tail(50)
 df_obs = df_obs.tail(50)
 
-# df_obs.plot()
-# plt.show()
+df_obs.plot()
+plt.show()
 
 
 # =============================

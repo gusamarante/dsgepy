@@ -9,7 +9,6 @@ import matplotlib.pyplot as plt
 # ================================
 # endogenous variables at t
 y, pi, i, a, v, exp_y, exp_pi = symbols('y, pi, i, a, v, exp_y, exp_pi')
-
 endog = Matrix([y, pi, i, a, v, exp_y, exp_pi])
 
 # endogenous variables at t - 1
@@ -114,7 +113,7 @@ dsge = DSGE(endog, endogl, exog, expec, equations,
             obs_data=df_obs,
             verbose=True)
 
-dsge.estimate(nsim=1000, ck=0.3, file_path='snkm2.h5')
+dsge.estimate(nsim=100, ck=0.3, file_path='snkm2.h5')
 
 dsge.eval_chains(burnin=0, show_charts=True)
 

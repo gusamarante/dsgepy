@@ -21,14 +21,6 @@ warnings.filterwarnings('ignore', category=PerformanceWarning)
 
 class DSGE(object):
 
-    # TODO Chain Evaluation
-    # TODO impulse response function
-    # TODO Forecast error variance
-    # TODO Series Forecast
-    # TODO Historical Decomposition
-    # TODO Model Identification (Iskrev's paper)
-    # TODO Add csminwel as an optimization method
-
     chains = None
     prior_info = None
     has_solution = False
@@ -83,7 +75,6 @@ class DSGE(object):
         if not (random_seed is None):
             seed(random_seed)
 
-        # TODO add observation covariance to allow for measurment errors
         kf = KalmanFilter(self.G1, self.obs_matrix, self.impact @ self.impact.T, None,
                           self.C_out.reshape(self.n_state), self.obs_offset.reshape(self.n_obs))
         simul_data = kf.sample(n_obs)

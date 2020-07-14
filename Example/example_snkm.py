@@ -30,9 +30,6 @@ expec = Matrix([eta_y, eta_pi])
 sigma, varphi, alpha, beta, theta, phi_pi, phi_y, rho_a, sigma_a, rho_v, sigma_v, sigma_pi = \
     symbols('sigma, varphi, alpha, beta, theta, phi_pi, phi_y, rho_a, sigma_a, rho_v, sigma_v, sigma_pi')
 
-estimate_param = Matrix([sigma, theta, phi_pi, phi_y, rho_a, sigma_a, rho_v, sigma_v, sigma_pi])
-calib_param = {varphi: 1, alpha: 0.4, beta: 0.997805}
-
 # Summary parameters
 psi_nya = (1 + varphi) / (sigma*(1-alpha) + varphi + alpha)
 kappa = (1 - theta)*(1 - theta * beta)*(sigma*(1-alpha) + varphi + alpha)
@@ -73,7 +70,7 @@ calib_dict = {sigma: 1.3,
               sigma_v: 0.3,
               sigma_pi: 0.8}
 
-obs_offset = Matrix(np.zeros(3))
+# obs_offset = Matrix(np.zeros(3))
 
 dsge_simul = DSGE(endog, endogl, exog, expec, equations,
                   calib_dict=calib_dict,
@@ -92,7 +89,8 @@ plt.show()
 # =============================
 # ===== MODEL ESTIMATION  =====
 # =============================
-
+calib_param = {varphi: 1, alpha: 0.4, beta: 0.997805}
+estimate_param = Matrix([sigma, theta, phi_pi, phi_y, rho_a, sigma_a, rho_v, sigma_v, sigma_pi])
 # priors
 prior_dict = {sigma:    {'dist': 'normal',   'mean':  1.30, 'std': 0.20, 'label': '$\\sigma$'},
               theta:    {'dist': 'beta',     'mean':  0.60, 'std': 0.20, 'label': '$\\theta$'},
@@ -113,7 +111,7 @@ dsge = DSGE(endog, endogl, exog, expec, equations,
             obs_data=df_obs,
             verbose=True)
 
-dsge.estimate(nsim=100, ck=0.3, file_path='snkm2.h5')
+dsge.estimate(nsim=1000, ck=0.3, file_path='snkm2.h5')
 
 dsge.eval_chains(burnin=0, show_charts=True)
 

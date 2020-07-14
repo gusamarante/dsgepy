@@ -87,7 +87,7 @@ class DSGE(object):
 
         return df_obs, df_states
 
-    def estimate(self, nsim=1000, ck=0.2, file_path=None):
+    def estimate(self, file_path, nsim=1000, ck=0.2):
 
         try:
             df_chains = pd.read_hdf(file_path, key='chains')
@@ -181,12 +181,12 @@ class DSGE(object):
         assert not (self.chains is None), 'There are no loaded chains'
         chain_size = self.chains.shape[0]
 
-        if type(burnin) is float and burnin < 1:
+        if type(burnin) is float and 0 <= burnin < 1:
             df_chains = self.chains.iloc[int(chain_size * burnin):]
         elif type(burnin) is int and burnin < chain_size:
             df_chains = self.chains.iloc[burnin + 1:]
         else:
-            raise ValueError("'burnin' must be either and int smaller than the chain size or a float between 0 and 1")
+            raise ValueError("'burnin' must be either an int smaller than the chain size or a float between 0 and 1")
 
         self._plot_chains(chains=df_chains, show_charts=show_charts)
 

@@ -1,3 +1,7 @@
+"""
+This script implents
+"""
+
 from pydsge import gensys
 import numpy as np
 

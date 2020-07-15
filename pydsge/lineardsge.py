@@ -496,6 +496,7 @@ def gensys(g0, g1, c, psi, pi, div=None, realsmall=0.000001):
 
     a, b, q, z = qz(g0, g1, 'complex')
 
+    # TODO the Matrix class will be deprecated in a future version of numpy. Should be changed to the ndarray.
     # Scipy's version of 'qz' is different from MATLAB's, Q needs to be hermitian transposed to get same output
     q = array(matrix(q).H)
 

@@ -111,7 +111,7 @@ dsge = DSGE(endog, endogl, exog, expec, equations,
             obs_data=df_obs,
             verbose=True)
 
-dsge.estimate(nsim=1000, ck=0.3, file_path='snkm2.h5')
+dsge.estimate(nsim=100, ck=0.3, file_path='snkm2.h5')
 
 dsge.eval_chains(burnin=0, show_charts=True)
 

@@ -8,11 +8,11 @@ interface which allows for symbolic declarations of the variables and equations.
 # Usage
 A full example on how to use this library with a small New Keynesian model is available in [this Jupyter notebook](https://github.com/gusamarante/pydsge/blob/master/Example/example_snkm.ipynb).
 
-# Model Especification
+## Model Especification
 * Model declaration with symbolic variables
 * linearized
 
-# Model Solution
+## Model Solution
 Based on the implementation of Christopher A. Sims' `gensys` function.
 You can find the author's original matlab code
 [here](https://dge.repec.org/codes/sims/linre3a/).

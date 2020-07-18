@@ -26,7 +26,7 @@ The paper explaining the solution method is
 * slow performance due to the symbolic library
 
 # Contributing
-If you would like to contribute, plese check the [contributing guidelines](https://github.com/gusamarante/pydsge/blob/master/CONTRIBUTING.md) here. A list of suggestion for features is available on the projects page of this repository.
+If you would like to contribute, plese check the [contributing guidelines](https://github.com/gusamarante/pydsge/blob/master/CONTRIBUTING.md) here. A list of feature suggestions (https://github.com/gusamarante/pydsge/projects) is available on the projects page of this repository.
 
 # More Information and Help
 

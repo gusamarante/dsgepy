@@ -1,8 +1,10 @@
 # pydsge
 This is a Python library to calibrate, estimate and analyze linearized DSGE models. The interface is inpired by the dynare 
-interface which allows for symbolic declarations of the variables and equations. The implemented bayesian estimation method uses markov chain monte carlo (MCMC) to simulate the posterior distributions of the parameters.
+interface which allows for symbolic declarations of the variables and equations. The implemented bayesian estimation method uses markov chain monte carlo (MCMC) to simulate the posterior distributions of the parameters. This library is an effort to bring the DSGE toolset into the open-source world in a fully python implementation, which allows to fully embrace the advantages of the programming language when working with DSGEs.
 
-This library is an effort to bring the DSGE toolset into the pythonic open-source world. If you would like to contribute please check the guidelines here.
+If you would like to contribute please check the guidelines here.
+
+# Getting Started
 
 # Model Especification
 * Model declaration with symbolic variables

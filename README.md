@@ -6,7 +6,7 @@ interface which allows for symbolic declarations of the variables and equations.
 * INSTAL HERE
 
 # Usage
-* EXAMPLE HERE
+A full example on how to use this library with a small New Keynesian model is available in [this Jupyter notebook](https://github.com/gusamarante/pydsge/blob/master/Example/example_snkm.ipynb).
 
 # Model Especification
 * Model declaration with symbolic variables

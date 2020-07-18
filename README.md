@@ -4,7 +4,11 @@ interface which allows for symbolic declarations of the variables and equations.
 
 If you would like to contribute please check the guidelines here.
 
-# Getting Started
+# Installation
+* INSTAL HERE
+
+# Usage
+* EXAMPLE HERE
 
 # Model Especification
 * Model declaration with symbolic variables
@@ -23,8 +27,10 @@ The paper explaining the solution method is
 # Drawbacks
 * slow performance due to the symbolic library
 
-# Colaboration
-* Feature suggestion on the project page
+# Contributing
+If you would like to contribute, plese check the contributing guidelines here. A list of suggestion for features is available on the projects page of this repository.
 
+
+# More Information and Help
 
 

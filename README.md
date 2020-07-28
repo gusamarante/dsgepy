@@ -61,4 +61,5 @@ repository.
 
 ---
 # More Information and Help
-support@pydsge.com
+If you need more information and help, specially about contributing, you can contact Gustavo Amarante on 
+developer@pydsge.com

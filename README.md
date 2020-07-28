@@ -7,7 +7,12 @@ to fully embrace the advantages of the programming language when working with DS
 
 ---
 # Installation
-* INSTAL HERE
+You can install this development version using:
+```
+pip install git+https://github.com/gusamarante/pydsge.git#egg=pydsge
+```
+
+A stable verion will be available soon
 
 ---
 # Usage

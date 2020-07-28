@@ -8,3 +8,6 @@ passwords or other non-public information).
 
 Please note we have a [code of conduct](https://github.com/gusamarante/pydsge/blob/master/CODE_OF_CONDUCT.md), please 
 follow it in all your interactions with the project.
+
+If you need more information and help, specially about contributing, you can contact Gustavo Amarante on 
+developer@pydsge.com

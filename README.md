@@ -13,7 +13,7 @@ to fully embrace the advantages of the programming language when working with DS
 # Usage
 A full example on how to use this library with a small New Keynesian model is available in 
 [this Jupyter notebook](https://github.com/gusamarante/pydsge/blob/master/Example/example_snkm.ipynb). The model used 
-in the example is descibred by the following equations: 
+in the example is descibred briefly by the following equations: 
 
 <img src="http://latex.codecogs.com/gif.latex?\tilde{y}_{t}=E_{t}\left(\tilde{y}_{t+1}\right)-\frac{1}{\sigma}\left[\hat{i}_{t}-E_{t}\left(\pi_{t+1}\right)\right]+\psi_{ya}^{n}\left(\rho_{a}-1\right)a_{t}" />
 

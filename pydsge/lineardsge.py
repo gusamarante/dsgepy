@@ -1,3 +1,8 @@
+"""
+Classes and functions for linearized DSGEs.
+Author: Gustavo Amarante
+"""
+
 import warnings
 import pandas as pd
 from tqdm import tqdm
@@ -20,6 +25,9 @@ warnings.filterwarnings('ignore', category=PerformanceWarning)
 
 
 class DSGE(object):
+    """
+    This is the main class which holds a DSGE model with all its attributes and methods.
+    """
 
     chains = None
     prior_info = None
@@ -28,6 +36,34 @@ class DSGE(object):
 
     def __init__(self, endog, endogl, exog, expec, state_equations, obs_equations=None, estimate_params=None,
                  calib_dict=None, prior_dict=None, obs_data=None, verbose=False):
+        """
+        Model declaration requires passing SymPy symbols as variables and parameters. Some arguments can be left empty
+        if you are working with simulations of calibrated models.
+
+        :param endog: SymPy matrix of symbols containing the endogenous variables.
+        :param endogl: SymPy matrix of symbols containing the lagged endogenous variables.
+        :param exog: SymPy matrix of symbols containing the exogenous shocks.
+        :param expec: SymPy matrix of symbols containing the expectational errors.
+        :param state_equations: SymPy matrix of symbolic expressions representing the model's equilibrium conditions,
+                                with zeros on the right-hand side of the equality.
+        :param obs_equations: SymPy matrix of symbolic expressions representing the model's observation equations, with
+                              observable variables on the left-hand side of the equation. This is only required if the
+                              model is going to be estimated. You do not need to provide observation equations to run
+                              simulations on a calibrated model.
+        :param estimate_params: SymPy matrix of symbols containing the parameters that are free to be estimated.
+        :param calib_dict: dict. Keys are the symbols of parameters that are going to be calibrated, and values are
+                           their calibrated value.
+        :param prior_dict: dict. Entries must have symbols of parameters that are going to be estimated. Values are
+                           dictionaries containing the following entries:
+                           - 'dist': prior distribution. 'normal', 'beta', 'gamma' or 'invgamma'.
+                           - 'mean': mean of the prior distribution.
+                           - 'std': standard deviation of the prior distribution.
+                           - 'label': str with name/representation of the estimated parameter. This argument accepts
+                                      LaTeX representations.
+        :param obs_data: pandas DataFrame with the observable variables. Columns must be in the same order as the
+                         'obs_equations' declarations.
+        :param verbose: <not implemented yet>
+        """
 
         self.verbose = verbose
         self.endog = endog
@@ -69,6 +105,16 @@ class DSGE(object):
             self.prior_info = self._get_prior_info()
 
     def simulate(self, n_obs=100, random_seed=None):
+        """
+        Given a calibrate or estimated model, simulates values of the endogenous variables based on random samples of
+        the exogenous shocks.
+        :param n_obs: number of observation in the time dimension.
+        :param random_seed: random seed for the simulation.
+        :return: pandas DataFrame. 'df_obs' contains the simualtions for the observable variables. 'df_state' contains
+                 the simulations for the state/endogenous variables.
+        """
+
+        # TODO se não tiver equações de observações, retornar None para o 'df_obs'
 
         assert self.has_solution, "No solution was generated yet"
 
@@ -88,6 +134,18 @@ class DSGE(object):
         return df_obs, df_states
 
     def estimate(self, file_path, nsim=1000, ck=0.2):
+        """
+        Run the MCMC estimation.
+        :param file_path: str. Save path where the MCMC chains are saved. The file format is HDF5 (.h5). This file
+                          format gets very heavy but has very fast read/write speed. If the file already exists, the
+                          estimation will resume from these previously simulated chains.
+        :param nsim: Length of the MCMC chains to be generated. If the chains are already stable, this is the number of
+                     draws from the posterior distribution.
+        :param ck: float. Scaling factor of the hessian matrix of the mode of the posterior distribution, which is used
+                   as the covariance matrix for the MCMC algorithm. Bayesian literature says this value needs to be
+                   calibrated in order to achieve your desired acceptance rate from the posterior draws.
+        :return: the 'chains' attribute of this DSGE instance is generated.
+        """
 
         try:
             df_chains = pd.read_hdf(file_path, key='chains')
@@ -170,6 +228,16 @@ class DSGE(object):
             print('Acceptance rate:', 100 * (accepted / nsim), 'percent')
 
     def eval_chains(self, burnin=0.3, load_chain=None, show_charts=False):
+        """
+
+        :param burnin: int or float. Number of observations on the begging of the chain that are going to be dropped to
+                       compute posterior statistics.
+        :param load_chain: str. Save pathe of the HDF5 file with the chains. Only required if the chains were not loaded
+                           in the estimation step.
+        :param show_charts: bool. If True, prior-posterior chart is shown. Red line are the theoretical prior densities,
+                            blues bars are the empirical posterior densities.
+        :return: the 'posterior_table' attribute of this DSGE instance is generated.
+        """
         # TODO Output a model calibrated with posteriors
 
         if not (load_chain is None):
@@ -218,7 +286,7 @@ class DSGE(object):
         P = self._calc_prior(theta)
         L = self._log_likelihood(theta)
         f = P + L
-        return f*1000
+        return f*1000  # x1000 is here to increase precison of the posterior mode-finding algorithm.
 
     def _calc_prior(self, theta):
         prior_dict = self.prior_dict

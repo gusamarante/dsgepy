@@ -15,15 +15,9 @@ A full example on how to use this library with a small New Keynesian model is av
 [this Jupyter notebook](https://github.com/gusamarante/pydsge/blob/master/Example/example_snkm.ipynb). The model used 
 in the example is descibred by the following equations: 
 
-$$
-\begin{align*}
-\tilde{y}_{t} & =E_{t}\left(\tilde{y}_{t+1}\right)-\frac{1}{\sigma}\left[\hat{i}_{t}-E_{t}\left(\pi_{t+1}\right)\right]+\psi_{ya}^{n}\left(\rho_{a}-1\right)a_{t}\\
-\pi_{t} & =\beta E_{t}\left(\pi_{t+1}\right)+\kappa\tilde{y}_{t}+\sigma_{\pi}\varepsilon_{t}^{\pi}\\
-\hat{i}_{t} & =\phi_{\pi}\pi_{t}+\phi_{y}\tilde{y}_{t}+v_{t}\\
-a_{t} & =\rho_{a}a_{t-1}+\sigma_{a}\varepsilon_{t}^{a}\\
-v_{t} & =\rho_{v}v_{t-1}+\sigma_{v}\varepsilon_{t}^{v}
-\end{align*}
-$$
+```math
+\tilde{y}_{t}=E_{t}\left(\tilde{y}_{t+1}\right)-\frac{1}{\sigma}\left[\hat{i}_{t}-E_{t}\left(\pi_{t+1}\right)\right]+\psi_{ya}^{n}\left(\rho_{a}-1\right)a_{t}\\
+```
 
 ## Model Especification
 For now, the model equations have to be linearized around its steady-state. Soon, there will be a functionality that 

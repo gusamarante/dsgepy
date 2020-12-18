@@ -1,6 +1,6 @@
 """
-Classes and functions for linearized DSGEs.
 Author: Gustavo Amarante
+Classes and functions for linearized DSGEs.
 """
 
 import warnings

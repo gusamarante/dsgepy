@@ -1,4 +1,3 @@
-import numpy as np
 from sympy import symbols, Matrix
 from pydsge import DSGE
 import matplotlib.pyplot as plt
@@ -34,7 +33,7 @@ sigma, varphi, alpha, beta, theta, phi_pi, phi_y, rho_a, sigma_a, rho_v, sigma_v
 psi_nya = (1 + varphi) / (sigma*(1-alpha) + varphi + alpha)
 kappa = (1 - theta)*(1 - theta * beta)*(sigma*(1-alpha) + varphi + alpha)
 
-# model equations
+# model (state) equations
 eq1 = y - exp_y + (1/sigma)*(i - exp_pi) - psi_nya * (rho_a - 1) * a
 eq2 = pi - beta * exp_pi - kappa * y - sigma_pi * eps_pi
 eq3 = i - phi_pi * pi - phi_y * y - v
@@ -45,7 +44,7 @@ eq7 = pi - exp_pil - eta_pi
 
 equations = Matrix([eq1, eq2, eq3, eq4, eq5, eq6, eq7])
 
-# observation equation
+# observation equations
 obs01 = y
 obs02 = pi
 obs03 = 1/beta - 1 + i
@@ -77,10 +76,10 @@ dsge_simul = DSGE(endog, endogl, exog, expec, equations,
                   obs_equations=obs_equations)
 print(dsge_simul.eu)
 
-df_obs, df_states = dsge_simul.simulate(n_obs=250, random_seed=1)
+df_obs, df_states = dsge_simul.simulate(n_obs=250, random_seed=666)
 
-df_states = df_states.tail(50)
-df_obs = df_obs.tail(50)
+df_states = df_states.tail(50).reset_index(drop=True)
+df_obs = df_obs.tail(50).reset_index(drop=True)
 
 df_obs.plot()
 plt.show()
@@ -111,7 +110,7 @@ dsge = DSGE(endog, endogl, exog, expec, equations,
             obs_data=df_obs,
             verbose=True)
 
-dsge.estimate(nsim=100, ck=0.3, file_path='snkm2.h5')
+dsge.estimate(nsim=500, ck=0.3, file_path='snkm.h5')
 
 dsge.eval_chains(burnin=0, show_charts=True)
 

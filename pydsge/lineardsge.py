@@ -3,6 +3,11 @@ Author: Gustavo Amarante
 Classes and functions for linearized DSGEs.
 """
 
+"""
+Todo before merging this branch with master
+* Clear all todos
+"""
+
 import warnings
 import pandas as pd
 from tqdm import tqdm
@@ -114,7 +119,7 @@ class DSGE(object):
                  the simulations for the state/endogenous variables.
         """
 
-        # TODO se não tiver equações de observações, retornar None para o 'df_obs'
+        # TODO se não tiver equações de observação, retornar None para o 'df_obs'
 
         assert self.has_solution, "No solution was generated yet"
 
@@ -261,6 +266,9 @@ class DSGE(object):
         self._plot_prior_posterior(chains=df_chains, show_charts=show_charts)
 
         self.posterior_table = self._posterior_table(chains=df_chains)
+
+    def irf(self, periods):
+        pass
 
     def _get_jacobians(self, generate_obs):
         # State Equations
@@ -416,6 +424,11 @@ class DSGE(object):
         return df_prior
 
     def _res2irr(self, theta_res):
+        """
+        converts the prior distribution from restricted to irrestricted
+        :param theta_res:
+        :return:
+        """
         prior_info = self.prior_info
         theta_irr = theta_res.copy()
 
@@ -440,6 +453,11 @@ class DSGE(object):
         return theta_irr
 
     def _irr2res(self, theta_irr):
+        """
+        converts the prior distribution from irrestricted to restricted
+        :param theta_irr:
+        :return:
+        """
         prior_info = self.prior_info
         theta_res = theta_irr.copy()
 
@@ -531,6 +549,7 @@ class DSGE(object):
             plt.show()
 
     def _posterior_table(self, chains):
+        # TODO make the percentile for the CI a parameter
 
         df = self.prior_info[['distribution', 'mean', 'std']]
         df = df.rename({'distribution': 'prior dist', 'mean': 'prior mean', 'std': 'prior std'}, axis=1)

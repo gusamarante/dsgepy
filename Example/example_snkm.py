@@ -74,6 +74,9 @@ calib_dict = {sigma: 1.3,
 dsge_simul = DSGE(endog, endogl, exog, expec, equations,
                   calib_dict=calib_dict,
                   obs_equations=obs_equations)
+
+df_irs = dsge_simul.irf(periods=12)
+
 print(dsge_simul.eu)
 
 df_obs, df_states = dsge_simul.simulate(n_obs=250, random_seed=666)
@@ -110,9 +113,9 @@ dsge = DSGE(endog, endogl, exog, expec, equations,
             obs_data=df_obs,
             verbose=True)
 
-dsge.estimate(nsim=500, ck=0.3, file_path='snkm.h5')
+dsge.estimate(nsim=200, ck=0.3, file_path='snkm.h5')
 
-dsge.eval_chains(burnin=0, show_charts=True)
+dsge.eval_chains(burnin=0.3, show_charts=True)
 
 dsge.posterior_table.to_clipboard()
 

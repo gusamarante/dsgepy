@@ -81,6 +81,7 @@ class DSGE(object):
         self.prior_dict = prior_dict
         self.data = obs_data
         self.n_state = len(endog)
+        self.n_exog = len(exog)
         self.n_obs = len(endog) if obs_equations is None else len(obs_equations)
         self.n_param = None if estimate_params is None else len(estimate_params)
 
@@ -216,6 +217,7 @@ class DSGE(object):
             else:
                 df_chains.loc[ii] = df_chains.loc[ii - 1]
 
+            # TODO this save interval could be a user input
             if ii % 100 == 0:
                 store = pd.HDFStore(file_path)
                 store['chains'] = df_chains
@@ -267,8 +269,34 @@ class DSGE(object):
 
         self.posterior_table = self._posterior_table(chains=df_chains)
 
-    def irf(self, periods):
-        pass
+    def irf(self, periods=12):
+        assert self.has_solution, 'Model does not have a solution yet. Cannot compute IRFs'
+
+        # number os periods ahead plus the contemporaneous effect
+        periods = periods + 1
+
+        # Initialiaze with zeros
+        irf_values = zeros((periods, self.n_state, self.n_exog))
+
+        # Compute the IRFs
+        partial = self.impact
+        for tt in range(periods):
+            irf_values[tt, :, :] = partial
+            partial = self.G1.dot(partial)
+
+        # organize in a MultiIndex DataFrame
+        col_names = [str(var) for var in self.endog]
+        idx_names = [str(var) for var in self.exog]
+        mindex = pd.MultiIndex.from_product([idx_names, list(range(periods))], names=['exog', 'periods'])
+        df_irf = pd.DataFrame(columns=col_names,
+                              index=mindex)
+
+        for count, var in enumerate(idx_names):
+            df_irf.loc[var] = irf_values[:, :, count]
+
+        # TODO IRF standard errors
+        # TODO Plot the IRFs
+        return df_irf
 
     def _get_jacobians(self, generate_obs):
         # State Equations
@@ -294,6 +322,7 @@ class DSGE(object):
         P = self._calc_prior(theta)
         L = self._log_likelihood(theta)
         f = P + L
+        # TODO is this really necessary?
         return f*1000  # x1000 is here to increase precison of the posterior mode-finding algorithm.
 
     def _calc_prior(self, theta):

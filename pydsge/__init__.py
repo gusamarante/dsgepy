@@ -1,4 +1,4 @@
-__all__ = ['DSGE', 'gensys']
+__all__ = ['DSGE', 'gensys', 'csminwel']
 
 from pydsge.lineardsge import DSGE, gensys
-from pydsge.csminwel import csminwel
+from pydsge.pycsminwel import csminwel

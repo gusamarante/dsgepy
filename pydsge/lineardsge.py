@@ -6,15 +6,16 @@ Classes and functions for linearized DSGEs.
 import warnings
 import pandas as pd
 from tqdm import tqdm
-from sympy import simplify, Matrix
 from scipy.linalg import qz
-from scipy.stats import beta, gamma, invgamma, norm, uniform
 import matplotlib.pyplot as plt
-from pykalman import KalmanFilter
-from numpy.linalg import svd, inv, eig
+from pykalman import KalmanFilter  # TODO warn about the use of this modified version
+from sympy import simplify, Matrix
 from tables import PerformanceWarning
+from numpy.linalg import svd, inv, eig
+from pydsge.pycsminwel import csminwel
 from scipy.optimize import minimize, basinhopping
 from numpy.random import multivariate_normal, rand, seed
+from scipy.stats import beta, gamma, invgamma, norm, uniform
 from numpy import diagonal, vstack, array, eye, where, diag, sqrt, hstack, zeros, \
     arange, exp, log, inf, nan, isnan, isinf, set_printoptions, matrix, linspace
 
@@ -29,13 +30,15 @@ class DSGE(object):
     This is the main class which holds a DSGE model with all its attributes and methods.
     """
 
+    optim_methods = ['csminwel', 'basinhopping', 'bfgs']
+
     chains = None
     prior_info = None
     has_solution = False
     posterior_table = None
 
     def __init__(self, endog, endogl, exog, expec, state_equations, obs_equations=None, estimate_params=None,
-                 calib_dict=None, prior_dict=None, obs_data=None, verbose=False):
+                 calib_dict=None, prior_dict=None, obs_data=None, verbose=False, optim_method='csminwel'):
         """
         Model declaration requires passing SymPy symbols as variables and parameters. Some arguments can be left empty
         if you are working with simulations of calibrated models.
@@ -65,6 +68,11 @@ class DSGE(object):
         :param verbose: <not implemented yet>
         """
 
+        # TODO make verbose prints better
+
+        assert optim_method in self.optim_methods, f"optimization method '{optim_method}' not implemented"
+
+        self.optim_method = optim_method
         self.verbose = verbose
         self.endog = endog
         self.endogl = endogl
@@ -162,12 +170,29 @@ class DSGE(object):
             theta_irr0 = self._res2irr(theta_res0)
             theta_irr0 = array(list(theta_irr0.values()))
 
-            # Optimization - SciPy minimize
-            # TODO put csminwel here
-            res = minimize(obj_func, theta_irr0, options={'disp': True}, method='BFGS')
-            theta_mode_irr = {k: v for k, v in zip(self.params, res.x)}
-            theta_mode_res = self._irr2res(theta_mode_irr)
-            sigmak = ck * res.hess_inv
+            # Optimization to find the posterior mode
+            if self.optim_method == 'csminwel':
+                _, theta_mode_irr, _, h, _, _, retcodeh = csminwel(fcn=obj_func, x0=theta_irr0, crit=1e-14, nit=100,
+                                                                   verbose=True, h0=1*eye(len(theta_irr0)))
+                theta_mode_irr = {k: v for k, v in zip(self.params, theta_mode_irr)}
+                theta_mode_res = self._irr2res(theta_mode_irr)
+                sigmak = ck * h
+
+            elif self.optim_method == 'bfgs':
+                res = minimize(obj_func, theta_irr0, options={'disp': True}, method='BFGS')
+                theta_mode_irr = {k: v for k, v in zip(self.params, res.x)}
+                theta_mode_res = self._irr2res(theta_mode_irr)
+                sigmak = ck * res.hess_inv
+
+            elif self.optim_method == 'basinhopping':
+                res = basinhopping(obj_func, theta_irr0)
+                theta_mode_irr = {k: v for k, v in zip(self.params, res.x)}
+                theta_mode_res = self._irr2res(theta_mode_irr)
+                sigmak = ck * res.hess_inv
+
+            else:
+                msg = f"optimization method '{self.optim_method}' not implemented"
+                raise NotImplementedError(msg)
 
             if self.verbose:
                 print('===== Posterior Mode =====')
@@ -176,16 +201,6 @@ class DSGE(object):
                 print(sigmak, '\n')
                 print('===== Eigenvalues of MH jump convariance =====')
                 print(eig(sigmak)[0], '\n')
-
-            # Optimization - Basinhoping
-            # res = basinhopping(obj_func, theta_irr0)
-            # theta_mode_irr = {k: v for k, v in zip(self.params, res.x)}
-            # theta_mode_res = self._irr2res(theta_mode_irr)
-            # sigmak = ck * res.hess_inv
-
-            # Overrides the result of the optimization
-            # theta_mode_res = self.prior_info['mean']
-            # sigmak = ck * eye(self.n_param)
 
             df_chains = pd.DataFrame(columns=[str(p) for p in list(self.params)], index=range(nsim))
             df_chains.loc[0] = list(theta_mode_res.values())
@@ -212,7 +227,7 @@ class DSGE(object):
             else:
                 df_chains.loc[ii] = df_chains.loc[ii - 1]
 
-            if ii % 100 == 0:
+            if ii % 100 == 0:  # Saves the chain every 100 samples
                 store = pd.HDFStore(file_path)
                 store['chains'] = df_chains
                 store['sigmak'] = pd.DataFrame(data=sigmak)
@@ -485,6 +500,7 @@ class DSGE(object):
             plt.show()
 
     def _plot_prior_posterior(self, chains, show_charts):
+        # TODO make the priors easier to see in the charts
         n_bins = int(sqrt(chains.shape[0]))
         n_cols = int(self.n_param ** 0.5)
         n_rows = n_cols + 1 if self.n_param > n_cols ** 2 else n_cols

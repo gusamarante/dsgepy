@@ -77,10 +77,10 @@ dsge_simul = DSGE(endog, endogl, exog, expec, equations,
                   obs_equations=obs_equations)
 print(dsge_simul.eu)
 
-df_obs, df_states = dsge_simul.simulate(n_obs=250, random_seed=1)
+df_obs, df_states = dsge_simul.simulate(n_obs=200, random_seed=1)
 
-df_states = df_states.tail(50)
-df_obs = df_obs.tail(50)
+df_states = df_states.tail(100)
+df_obs = df_obs.tail(100)
 
 df_obs.plot()
 plt.show()
@@ -111,7 +111,7 @@ dsge = DSGE(endog, endogl, exog, expec, equations,
             obs_data=df_obs,
             verbose=True)
 
-dsge.estimate(nsim=100, ck=0.3, file_path='snkm2.h5')
+dsge.estimate(nsim=5000, ck=0.2, file_path='snkm2.h5')
 
 dsge.eval_chains(burnin=0, show_charts=True)
 

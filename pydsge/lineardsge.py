@@ -163,6 +163,7 @@ class DSGE(object):
             theta_irr0 = array(list(theta_irr0.values()))
 
             # Optimization - SciPy minimize
+            # TODO put csminwel here
             res = minimize(obj_func, theta_irr0, options={'disp': True}, method='BFGS')
             theta_mode_irr = {k: v for k, v in zip(self.params, res.x)}
             theta_mode_res = self._irr2res(theta_mode_irr)

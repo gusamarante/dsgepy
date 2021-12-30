@@ -23,6 +23,7 @@ pd.set_option('display.max_columns', 20)
 set_printoptions(precision=4, suppress=True, linewidth=150)
 warnings.filterwarnings('ignore', category=RuntimeWarning)
 warnings.filterwarnings('ignore', category=PerformanceWarning)
+warnings.filterwarnings('ignore', category=pd.errors.PerformanceWarning)
 
 
 class DSGE(object):
@@ -43,29 +44,29 @@ class DSGE(object):
         Model declaration requires passing SymPy symbols as variables and parameters. Some arguments can be left empty
         if you are working with simulations of calibrated models.
 
-        :param endog: SymPy matrix of symbols containing the endogenous variables.
-        :param endogl: SymPy matrix of symbols containing the lagged endogenous variables.
-        :param exog: SymPy matrix of symbols containing the exogenous shocks.
-        :param expec: SymPy matrix of symbols containing the expectational errors.
-        :param state_equations: SymPy matrix of symbolic expressions representing the model's equilibrium conditions,
+        @param endog: SymPy matrix of symbols containing the endogenous variables.
+        @param endogl: SymPy matrix of symbols containing the lagged endogenous variables.
+        @param exog: SymPy matrix of symbols containing the exogenous shocks.
+        @param expec: SymPy matrix of symbols containing the expectational errors.
+        @param state_equations: SymPy matrix of symbolic expressions representing the model's equilibrium conditions,
                                 with zeros on the right-hand side of the equality.
-        :param obs_equations: SymPy matrix of symbolic expressions representing the model's observation equations, with
+        @param obs_equations: SymPy matrix of symbolic expressions representing the model's observation equations, with
                               observable variables on the left-hand side of the equation. This is only required if the
                               model is going to be estimated. You do not need to provide observation equations to run
                               simulations on a calibrated model.
-        :param estimate_params: SymPy matrix of symbols containing the parameters that are free to be estimated.
-        :param calib_dict: dict. Keys are the symbols of parameters that are going to be calibrated, and values are
+        @param estimate_params: SymPy matrix of symbols containing the parameters that are free to be estimated.
+        @param calib_dict: dict. Keys are the symbols of parameters that are going to be calibrated, and values are
                            their calibrated value.
-        :param prior_dict: dict. Entries must have symbols of parameters that are going to be estimated. Values are
+        @param prior_dict: dict. Entries must have symbols of parameters that are going to be estimated. Values are
                            dictionaries containing the following entries:
                            - 'dist': prior distribution. 'normal', 'beta', 'gamma' or 'invgamma'.
                            - 'mean': mean of the prior distribution.
                            - 'std': standard deviation of the prior distribution.
                            - 'label': str with name/representation of the estimated parameter. This argument accepts
                                       LaTeX representations.
-        :param obs_data: pandas DataFrame with the observable variables. Columns must be in the same order as the
+        @param obs_data: pandas DataFrame with the observable variables. Columns must be in the same order as the
                          'obs_equations' declarations.
-        :param verbose: <not implemented yet>
+        @param verbose: <not implemented yet>
         """
 
         # TODO make verbose prints better
@@ -114,11 +115,11 @@ class DSGE(object):
 
     def simulate(self, n_obs=100, random_seed=None):
         """
-        Given a calibrate or estimated model, simulates values of the endogenous variables based on random samples of
+        Given a calibration or estimated model, simulates values of the endogenous variables based on random samples of
         the exogenous shocks.
-        :param n_obs: number of observation in the time dimension.
-        :param random_seed: random seed for the simulation.
-        :return: pandas DataFrame. 'df_obs' contains the simualtions for the observable variables. 'df_state' contains
+        @param n_obs: number of observation in the time dimension.
+        @param random_seed: random seed for the simulation.
+        @return: pandas DataFrame. 'df_obs' contains the simualtions for the observable variables. 'df_state' contains
                  the simulations for the state/endogenous variables.
         """
 
@@ -144,15 +145,15 @@ class DSGE(object):
     def estimate(self, file_path, nsim=1000, ck=0.2):
         """
         Run the MCMC estimation.
-        :param file_path: str. Save path where the MCMC chains are saved. The file format is HDF5 (.h5). This file
+        @param file_path: str. Save path where the MCMC chains are saved. The file format is HDF5 (.h5). This file
                           format gets very heavy but has very fast read/write speed. If the file already exists, the
                           estimation will resume from these previously simulated chains.
-        :param nsim: Length of the MCMC chains to be generated. If the chains are already stable, this is the number of
+        @param nsim: Length of the MCMC chains to be generated. If the chains are already stable, this is the number of
                      draws from the posterior distribution.
-        :param ck: float. Scaling factor of the hessian matrix of the mode of the posterior distribution, which is used
+        @param ck: float. Scaling factor of the hessian matrix of the mode of the posterior distribution, which is used
                    as the covariance matrix for the MCMC algorithm. Bayesian literature says this value needs to be
                    calibrated in order to achieve your desired acceptance rate from the posterior draws.
-        :return: the 'chains' attribute of this DSGE instance is generated.
+        @return: the 'chains' attribute of this DSGE instance is generated.
         """
 
         try:
@@ -246,13 +247,13 @@ class DSGE(object):
     def eval_chains(self, burnin=0.3, load_chain=None, show_charts=False):
         """
 
-        :param burnin: int or float. Number of observations on the begging of the chain that are going to be dropped to
+        @param burnin: int or float. Number of observations on the begging of the chain that are going to be dropped to
                        compute posterior statistics.
-        :param load_chain: str. Save pathe of the HDF5 file with the chains. Only required if the chains were not loaded
+        @param load_chain: str. Save pathe of the HDF5 file with the chains. Only required if the chains were not loaded
                            in the estimation step.
-        :param show_charts: bool. If True, prior-posterior chart is shown. Red line are the theoretical prior densities,
+        @param show_charts: bool. If True, prior-posterior chart is shown. Red line are the theoretical prior densities,
                             blues bars are the empirical posterior densities.
-        :return: the 'posterior_table' attribute of this DSGE instance is generated.
+        @return: the 'posterior_table' attribute of this DSGE instance is generated.
         """
         # TODO Output a model calibrated with posteriors
 
@@ -611,10 +612,12 @@ def gensys(g0, g1, c, psi, pi, div=None, realsmall=0.000001):
 
     q1 = q[:n - nunstab, :]
     q2 = q[n - nunstab:, :]
-    z1 = z[:, :n - nunstab].T
-    z2 = z[:, n - nunstab:]
-    a2 = a[n - nunstab:, n - nunstab:]
-    b2 = a[n - nunstab:, n - nunstab:]
+
+    # This was in the author's original code, but seems unused
+    # z1 = z[:, :n - nunstab].T
+    # z2 = z[:, n - nunstab:]
+    # a2 = a[n - nunstab:, n - nunstab:]
+    # b2 = a[n - nunstab:, n - nunstab:]
 
     etawt = q2 @ pi
     neta = pi.shape[1]
@@ -622,7 +625,7 @@ def gensys(g0, g1, c, psi, pi, div=None, realsmall=0.000001):
     # Case for no stable roots
     if nunstab == 0:
         bigev = 0
-        etawt = zeros((0, neta))
+        # etawt = zeros((0, neta))
         ueta = zeros((0, 0))
         deta = zeros((0, 0))
         veta = zeros((neta, 0))
@@ -652,10 +655,10 @@ def gensys(g0, g1, c, psi, pi, div=None, realsmall=0.000001):
         ueta1 = zeros((0, 0))
         deta1 = zeros((0, 0))
         veta1 = zeros((neta, 0))
-        bigev = 0
+        # bigev = 0
     else:
         etawt1 = q1 @ pi
-        ndeta1 = min(n - nunstab, neta)
+        # ndeta1 = min(n - nunstab, neta)
         ueta1, deta1, veta1 = svd(etawt1)
         deta1 = diag(deta1)
         veta1 = array(matrix(veta1).H)  # TODO check if transpose, instead of hermitian

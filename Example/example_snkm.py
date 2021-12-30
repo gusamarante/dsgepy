@@ -1,7 +1,6 @@
-import numpy as np
-from sympy import symbols, Matrix
 from pydsge import DSGE
 import matplotlib.pyplot as plt
+from sympy import symbols, Matrix
 
 
 # ================================

@@ -246,8 +246,6 @@ class DSGE(object):
         if self.verbose:
             print('Acceptance rate:', 100 * (accepted / nsim), 'percent')
 
-        # TODO after estimation, save posterior mode for analysis
-
     def eval_chains(self, burnin=0.3, load_chain=None, show_charts=False):
         """
 
@@ -278,11 +276,22 @@ class DSGE(object):
         else:
             raise ValueError("'burnin' must be either an int smaller than the chain size or a float between 0 and 1")
 
-        self._plot_chains(chains=df_chains, show_charts=show_charts)
-
-        self._plot_prior_posterior(chains=df_chains, show_charts=show_charts)
+        if show_charts:
+            self._plot_chains(chains=df_chains, show_charts=show_charts)
+            self._plot_prior_posterior(chains=df_chains, show_charts=show_charts)
 
         self.posterior_table = self._posterior_table(chains=df_chains)
+
+        # Calibrate model with the posterior mode
+        calib_dict = self.posterior_table['posterior mode'].to_dict()
+
+        self.Gamma0, self.Gamma1, self.Psi, self.Pi, self.C_in, self.obs_matrix, self.obs_offset = \
+            self._eval_matrix(calib_dict, to_array=True)
+
+        self.G1, self.C_out, self.impact, self.fmat, self.fwt, self.ywt, self.gev, self.eu, self.loose = \
+            gensys(self.Gamma0, self.Gamma1, self.C_in, self.Psi, self.Pi)
+
+        self.has_solution = True
 
     def irf(self, periods=12):
         # TODO documentation

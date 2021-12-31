@@ -30,8 +30,8 @@ sigma, varphi, alpha, beta, theta, phi_pi, phi_y, rho_a, sigma_a, rho_v, sigma_v
     symbols('sigma, varphi, alpha, beta, theta, phi_pi, phi_y, rho_a, sigma_a, rho_v, sigma_v, sigma_pi')
 
 # Summary parameters
-psi_nya = (1 + varphi) / (sigma*(1-alpha) + varphi + alpha)
-kappa = (1 - theta)*(1 - theta * beta)*(sigma*(1-alpha) + varphi + alpha)
+psi_nya = (1 + varphi) / (sigma * (1 - alpha) + varphi + alpha)
+kappa = (1 - theta) * (1 - theta * beta) * (sigma * (1 - alpha) + varphi + alpha)
 
 # model (state) equations
 eq1 = y - exp_y + (1/sigma)*(i - exp_pi) - psi_nya * (rho_a - 1) * a

@@ -12,7 +12,11 @@ You can install this development version using:
 pip install git+https://github.com/gusamarante/pydsge.git#egg=pydsge
 ```
 
-A stable verion will be available soon
+### Kalman Filter
+Computing the likelihood of models involve using the kalman filter. `pykalman` is available for python, but some 
+adjustments to the original library were needed to use with this library. So in order for `pydsge` to work you need 
+the corrected version of `pykalman`, available [here](https://github.com/gusamarante/pykalman). The corrections here 
+correct the way `pykalman` handles masked numpy arrays and deals with ill-estimated covariance matrices.  
 
 ---
 # Usage
@@ -53,7 +57,7 @@ it later from where it stoped.
 # Drawbacks
 Since there is symbolic declaration of variables and equations, methdos involving them are slow, so the MCMC methods 
 typically take a long time to run. Although there is a lot room for improvement for the efficiency of these estimation
-algorithms. 
+algorithms.
 
 
 ---

@@ -6,9 +6,10 @@ Classes and functions for linearized DSGEs.
 import warnings
 import pandas as pd
 from tqdm import tqdm
+from math import ceil
 from scipy.linalg import qz
 import matplotlib.pyplot as plt
-from pykalman import KalmanFilter  # TODO warn about the use of this modified version
+from pykalman import KalmanFilter
 from sympy import simplify, Matrix
 from tables import PerformanceWarning
 from numpy.linalg import svd, inv, eig
@@ -37,6 +38,7 @@ class DSGE(object):
     prior_info = None
     has_solution = False
     posterior_table = None
+    acceptance_rate = None
 
     def __init__(self, endog, endogl, exog, expec, state_equations, obs_equations=None, estimate_params=None,
                  calib_dict=None, prior_dict=None, obs_data=None, verbose=False, optim_method='csminwel'):
@@ -69,8 +71,6 @@ class DSGE(object):
         @param verbose: <not implemented yet>
         """
 
-        # TODO make verbose prints better
-
         assert optim_method in self.optim_methods, f"optimization method '{optim_method}' not implemented"
 
         self.optim_method = optim_method
@@ -89,7 +89,6 @@ class DSGE(object):
         self.n_obs = len(endog) if obs_equations is None else len(obs_equations)
         self.n_param = None if estimate_params is None else len(estimate_params)
 
-        # TODO aqui pode vir um check the obs data e obs equations
         if (obs_equations is None) and (obs_data is None):
             generate_obs = True
         else:
@@ -104,8 +103,6 @@ class DSGE(object):
 
             self.G1, self.C_out, self.impact, self.fmat, self.fwt, self.ywt, self.gev, self.eu, self.loose = \
                 gensys(self.Gamma0, self.Gamma1, self.C_in, self.Psi, self.Pi)
-
-            # TODO assert that there are no symbols left
 
             self.has_solution = True
         else:
@@ -124,8 +121,6 @@ class DSGE(object):
                  the simulations for the state/endogenous variables.
         """
 
-        # TODO se não tiver equações de observação, retornar None para o 'df_obs'
-
         assert self.has_solution, "No solution was generated yet"
 
         if not (random_seed is None):
@@ -143,7 +138,7 @@ class DSGE(object):
 
         return df_obs, df_states
 
-    def estimate(self, file_path, nsim=1000, ck=0.2):
+    def estimate(self, file_path, nsim=1000, ck=0.2, save_interval=100):
         """
         Run the MCMC estimation.
         @param file_path: str. Save path where the MCMC chains are saved. The file format is HDF5 (.h5). This file
@@ -154,6 +149,9 @@ class DSGE(object):
         @param ck: float. Scaling factor of the hessian matrix of the mode of the posterior distribution, which is used
                    as the covariance matrix for the MCMC algorithm. Bayesian literature says this value needs to be
                    calibrated in order to achieve your desired acceptance rate from the posterior draws.
+        @param save_interval: int. Save the MCMC chains every `save_interval` iterations. This is useful in case
+                              something goes wrong and interrupts the program, so you can restart the MCMC sampling
+                              where it last saved.
         @return: the 'chains' attribute of this DSGE instance is generated.
         """
 
@@ -229,8 +227,8 @@ class DSGE(object):
             else:
                 df_chains.loc[ii] = df_chains.loc[ii - 1]
 
-            # TODO this save interval could be a user input
-            if ii % 100 == 0:
+            # Save the partial chains
+            if ii % save_interval == 0:
                 store = pd.HDFStore(file_path)
                 store['chains'] = df_chains
                 store['sigmak'] = pd.DataFrame(data=sigmak)
@@ -242,13 +240,15 @@ class DSGE(object):
         store.close()
 
         self.chains = df_chains.astype(float)
+        self.acceptance_rate = accepted / nsim
 
         if self.verbose:
             print('Acceptance rate:', 100 * (accepted / nsim), 'percent')
 
     def eval_chains(self, burnin=0.3, load_chain=None, show_charts=False):
         """
-
+        This function evaluates the chains generated in the estimation step and calibrates the model with the posterior
+        mode. It also has functionalities to plot the generated chains and posterior distributions.
         @param burnin: int or float. Number of observations on the begging of the chain that are going to be dropped to
                        compute posterior statistics.
         @param load_chain: str. Save pathe of the HDF5 file with the chains. Only required if the chains were not loaded
@@ -257,8 +257,6 @@ class DSGE(object):
                             blues bars are the empirical posterior densities.
         @return: the 'posterior_table' attribute of this DSGE instance is generated.
         """
-        # TODO Output a model calibrated with posteriors
-        # TODO finish documentation
 
         if not (load_chain is None):
             try:
@@ -293,9 +291,15 @@ class DSGE(object):
 
         self.has_solution = True
 
-    def irf(self, periods=12):
-        # TODO documentation
-        # TODO IRF plot function
+    def irf(self, periods=12, show_charts=False):
+        """
+        Generates and plot impulse-response functions (IRFs).
+        @param periods: int. Number of periods in the IRFs.
+        @param show_charts: bool. If true, plot the IRFs for each shock.
+        @return: a MultiIndex pandas.DataFrame with (shock, period) as the index and variables as the columns.
+        """
+        # TODO IRF standard errors
+
         assert self.has_solution, 'Model does not have a solution yet. Cannot compute IRFs'
 
         # number os periods ahead plus the contemporaneous effect
@@ -320,8 +324,23 @@ class DSGE(object):
         for count, var in enumerate(idx_names):
             df_irf.loc[var] = irf_values[:, :, count]
 
-        # TODO IRF standard errors
-        # TODO Plot the IRFs
+        # Charts
+        if show_charts:
+            shocks = df_irf.index.get_level_values(0).unique()
+
+            n_cols = ceil(sqrt(df_irf.shape[1]))
+            subplot_shape = (n_cols, n_cols)
+
+            for ss in shocks:
+                ax = df_irf.loc[ss].plot(title=f'Estimated IRFs: Shock {ss}',
+                                         subplots=True,
+                                         layout=subplot_shape,
+                                         grid=True,
+                                         figsize=(9, 7),
+                                         sharey=True)
+                plt.tight_layout()
+                plt.show()
+
         return df_irf
 
     def _get_jacobians(self, generate_obs):
@@ -348,7 +367,6 @@ class DSGE(object):
         P = self._calc_prior(theta)
         L = self._log_likelihood(theta)
         f = P + L
-        # TODO is this really necessary?
         return f*1000  # x1000 is here to increase precison of the posterior mode-finding algorithm.
 
     def _calc_prior(self, theta):
@@ -405,7 +423,6 @@ class DSGE(object):
         G1, C_out, impact, fmat, fwt, ywt, gev, eu, loose = gensys(Gamma0, Gamma1, C_in, Psi, Pi)
 
         if eu[0] == 1 and eu[1] == 1:
-            # TODO add observation covariance to allow for measurment errors
             kf = KalmanFilter(G1, obs_matrix, impact @ impact.T, None, C_out.reshape(self.n_state),
                               obs_offset.reshape(self.n_obs))
             L = kf.loglikelihood(self.data)
@@ -557,7 +574,6 @@ class DSGE(object):
             plt.show()
 
     def _plot_prior_posterior(self, chains, show_charts):
-        # TODO make the priors easier to see in the charts
         n_bins = int(sqrt(chains.shape[0]))
         n_cols = int(self.n_param ** 0.5)
         n_rows = n_cols + 1 if self.n_param > n_cols ** 2 else n_cols

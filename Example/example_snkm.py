@@ -74,29 +74,19 @@ dsge_simul = DSGE(endog, endogl, exog, expec, equations,
                   obs_equations=obs_equations)
 
 # IRFs from the theoretical Model
-# df_irf = dsge_simul.irf(periods=24)
-# shocks = df_irf.index.get_level_values(0).unique()
-#
-# for ss in shocks:
-#     ax = df_irf.loc[ss].plot(title=f'Theoretical IRFs: Shock {ss}',
-#                              subplots=True,
-#                              layout=(3, 3),
-#                              grid=True,
-#                              figsize=(9, 7),
-#                              sharey=True)
-#     plt.tight_layout()
-#     plt.show()
-#
-#
-# print(dsge_simul.eu)
+df_irf = dsge_simul.irf(periods=24, show_charts=True)
 
+# Check existance and uniqueness
+print(dsge_simul.eu)
+
+# Simulate observations
 df_obs, df_states = dsge_simul.simulate(n_obs=200, random_seed=1)
 
 df_states = df_states.tail(100).reset_index(drop=True)
 df_obs = df_obs.tail(100).reset_index(drop=True)
 
-# df_obs.plot()
-# plt.show()
+df_obs.plot()
+plt.show()
 
 
 # =============================
@@ -128,22 +118,9 @@ dsge = DSGE(endog, endogl, exog, expec, equations,
 
 dsge.estimate(nsim=10, ck=0.2, file_path='snkm.h5')
 
-dsge.eval_chains(burnin=0, show_charts=True)
+dsge.eval_chains(burnin=0.1 , show_charts=True)
 
-# print(dsge.posterior_table)
+print(dsge.posterior_table)
 
 # IRFs from the estimated Model
-df_irf = dsge.irf(periods=24)
-shocks = df_irf.index.get_level_values(0).unique()
-
-for ss in shocks:
-    ax = df_irf.loc[ss].plot(title=f'Estimated IRFs: Shock {ss}',
-                             subplots=True,
-                             layout=(3, 3),
-                             grid=True,
-                             figsize=(9, 7),
-                             sharey=True)
-    plt.tight_layout()
-    plt.show()
-
-
+df_irf = dsge.irf(periods=24, show_charts=True)

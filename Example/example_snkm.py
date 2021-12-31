@@ -69,13 +69,24 @@ calib_dict = {sigma: 1.3,
               sigma_v: 0.3,
               sigma_pi: 0.8}
 
-# obs_offset = Matrix(np.zeros(3))
-
 dsge_simul = DSGE(endog, endogl, exog, expec, equations,
                   calib_dict=calib_dict,
                   obs_equations=obs_equations)
 
-df_irs = dsge_simul.irf(periods=12)
+# IRFs from the theoretical Model
+df_irf = dsge_simul.irf(periods=24)
+shocks = df_irf.index.get_level_values(0).unique()
+
+for ss in shocks:
+    ax = df_irf.loc[ss].plot(title=f'Theoretical IRFs: Shock {ss}',
+                             subplots=True,
+                             layout=(3, 3),
+                             grid=True,
+                             figsize=(9, 7),
+                             sharey=True)
+    plt.tight_layout()
+    plt.show()
+
 
 print(dsge_simul.eu)
 
@@ -113,10 +124,24 @@ dsge = DSGE(endog, endogl, exog, expec, equations,
             obs_data=df_obs,
             verbose=True)
 
-dsge.estimate(nsim=5000, ck=0.2, file_path='snkm.h5')
+dsge.estimate(nsim=500, ck=0.2, file_path='snkm.h5')
 
 dsge.eval_chains(burnin=0, show_charts=True)
 
-dsge.posterior_table.to_clipboard()
-
 print(dsge.posterior_table)
+
+# IRFs from the estimated Model
+df_irf = dsge.irf(periods=24)
+shocks = df_irf.index.get_level_values(0).unique()
+
+for ss in shocks:
+    ax = df_irf.loc[ss].plot(title=f'Estimated IRFs: Shock {ss}',
+                             subplots=True,
+                             layout=(3, 3),
+                             grid=True,
+                             figsize=(9, 7),
+                             sharey=True)
+    plt.tight_layout()
+    plt.show()
+
+

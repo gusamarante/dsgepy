@@ -246,6 +246,8 @@ class DSGE(object):
         if self.verbose:
             print('Acceptance rate:', 100 * (accepted / nsim), 'percent')
 
+        # TODO after estimation, save posterior mode for analysis
+
     def eval_chains(self, burnin=0.3, load_chain=None, show_charts=False):
         """
 
@@ -258,6 +260,7 @@ class DSGE(object):
         @return: the 'posterior_table' attribute of this DSGE instance is generated.
         """
         # TODO Output a model calibrated with posteriors
+        # TODO finish documentation
 
         if not (load_chain is None):
             try:
@@ -282,6 +285,8 @@ class DSGE(object):
         self.posterior_table = self._posterior_table(chains=df_chains)
 
     def irf(self, periods=12):
+        # TODO documentation
+        # TODO IRF plot function
         assert self.has_solution, 'Model does not have a solution yet. Cannot compute IRFs'
 
         # number os periods ahead plus the contemporaneous effect
@@ -294,7 +299,7 @@ class DSGE(object):
         partial = self.impact
         for tt in range(periods):
             irf_values[tt, :, :] = partial
-            partial = self.G1.dot(partial)
+            partial = self.G1 @ partial
 
         # organize in a MultiIndex DataFrame
         col_names = [str(var) for var in self.endog]

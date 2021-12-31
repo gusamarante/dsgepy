@@ -85,6 +85,7 @@ class DSGE(object):
         self.prior_dict = prior_dict
         self.data = obs_data
         self.n_state = len(endog)
+        self.n_exog = len(exog)
         self.n_obs = len(endog) if obs_equations is None else len(obs_equations)
         self.n_param = None if estimate_params is None else len(estimate_params)
 
@@ -123,7 +124,7 @@ class DSGE(object):
                  the simulations for the state/endogenous variables.
         """
 
-        # TODO se não tiver equações de observações, retornar None para o 'df_obs'
+        # TODO se não tiver equações de observação, retornar None para o 'df_obs'
 
         assert self.has_solution, "No solution was generated yet"
 
@@ -228,7 +229,8 @@ class DSGE(object):
             else:
                 df_chains.loc[ii] = df_chains.loc[ii - 1]
 
-            if ii % 100 == 0:  # Saves the chain every 100 samples
+            # TODO this save interval could be a user input
+            if ii % 100 == 0:
                 store = pd.HDFStore(file_path)
                 store['chains'] = df_chains
                 store['sigmak'] = pd.DataFrame(data=sigmak)
@@ -279,6 +281,35 @@ class DSGE(object):
 
         self.posterior_table = self._posterior_table(chains=df_chains)
 
+    def irf(self, periods=12):
+        assert self.has_solution, 'Model does not have a solution yet. Cannot compute IRFs'
+
+        # number os periods ahead plus the contemporaneous effect
+        periods = periods + 1
+
+        # Initialiaze with zeros
+        irf_values = zeros((periods, self.n_state, self.n_exog))
+
+        # Compute the IRFs
+        partial = self.impact
+        for tt in range(periods):
+            irf_values[tt, :, :] = partial
+            partial = self.G1.dot(partial)
+
+        # organize in a MultiIndex DataFrame
+        col_names = [str(var) for var in self.endog]
+        idx_names = [str(var) for var in self.exog]
+        mindex = pd.MultiIndex.from_product([idx_names, list(range(periods))], names=['exog', 'periods'])
+        df_irf = pd.DataFrame(columns=col_names,
+                              index=mindex)
+
+        for count, var in enumerate(idx_names):
+            df_irf.loc[var] = irf_values[:, :, count]
+
+        # TODO IRF standard errors
+        # TODO Plot the IRFs
+        return df_irf
+
     def _get_jacobians(self, generate_obs):
         # State Equations
         self.Gamma0 = self.state_equations.jacobian(self.endog)
@@ -303,6 +334,7 @@ class DSGE(object):
         P = self._calc_prior(theta)
         L = self._log_likelihood(theta)
         f = P + L
+        # TODO is this really necessary?
         return f*1000  # x1000 is here to increase precison of the posterior mode-finding algorithm.
 
     def _calc_prior(self, theta):
@@ -433,6 +465,11 @@ class DSGE(object):
         return df_prior
 
     def _res2irr(self, theta_res):
+        """
+        converts the prior distribution from restricted to irrestricted
+        :param theta_res:
+        :return:
+        """
         prior_info = self.prior_info
         theta_irr = theta_res.copy()
 
@@ -457,6 +494,11 @@ class DSGE(object):
         return theta_irr
 
     def _irr2res(self, theta_irr):
+        """
+        converts the prior distribution from irrestricted to restricted
+        :param theta_irr:
+        :return:
+        """
         prior_info = self.prior_info
         theta_res = theta_irr.copy()
 
@@ -549,6 +591,7 @@ class DSGE(object):
             plt.show()
 
     def _posterior_table(self, chains):
+        # TODO make the percentile for the CI a parameter
 
         df = self.prior_info[['distribution', 'mean', 'std']]
         df = df.rename({'distribution': 'prior dist', 'mean': 'prior mean', 'std': 'prior std'}, axis=1)

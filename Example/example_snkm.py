@@ -118,7 +118,7 @@ dsge = DSGE(endog, endogl, exog, expec, equations,
 
 dsge.estimate(nsim=10, ck=0.2, file_path='snkm.h5')
 
-dsge.eval_chains(burnin=0.1 , show_charts=True)
+dsge.eval_chains(burnin=0.1, show_charts=True)
 
 print(dsge.posterior_table)
 

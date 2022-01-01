@@ -630,8 +630,8 @@ class DSGE(object):
         df = df.rename({'distribution': 'prior dist', 'mean': 'prior mean', 'std': 'prior std'}, axis=1)
         df['posterior mode'] = chains.mode().mean()
         df['posterior mean'] = chains.mean()
-        df[f'posterior {100 * round(low_conf, 2)}%'] = chains.quantile(low_conf)
-        df[f'posterior {100 * round(high_conf, 2)}%'] = chains.quantile(high_conf)
+        df[f'posterior {100 * round(low_conf, 3)}%'] = chains.quantile(low_conf)
+        df[f'posterior {100 * round(high_conf, 3)}%'] = chains.quantile(high_conf)
 
         return df
 

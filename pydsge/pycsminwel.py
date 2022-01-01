@@ -145,7 +145,7 @@ def csminwel(fcn, x0, h0=None, grad=None, crit=1e-14, nit=100, verbose=False):
                             retcode3 = 101
                         else:
                             gcliff = ((f2 - f1) / ((np.linalg.norm(x2 - x1)) ** 2)) * (x2 - x1)
-                            # TODO "if (size(x0, 2) > 1), gcliff=gcliff', end"   <-- this is matlab code, only
+                            # "if (size(x0, 2) > 1), gcliff=gcliff', end"   <-- this is matlab code, only
                             #  needed if x is a matrix. Not our case.
                             f3, x3, fc, retcode3 = csminit(fcn, x, f, gcliff, False, np.eye(nx))
                             fcount += fc
@@ -456,7 +456,7 @@ def bfgsi(h0, dg, dx, verbose=False):
     :return: updated inverse hessian matrix
     """
 
-    # TODO the code below is only needed if the input x is a matrix (in matlab)
+    # the code below is only needed if the input x is a matrix (in matlab)
     # if size(dg, 2) > 1
     #     dg = dg
     #     ';

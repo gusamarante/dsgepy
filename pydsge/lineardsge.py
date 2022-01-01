@@ -18,7 +18,7 @@ from scipy.optimize import minimize, basinhopping
 from numpy.random import multivariate_normal, rand, seed
 from scipy.stats import beta, gamma, invgamma, norm, uniform
 from numpy import diagonal, vstack, array, eye, where, diag, sqrt, hstack, zeros, \
-    arange, exp, log, inf, nan, isnan, isinf, set_printoptions, matrix, linspace
+    arange, exp, log, inf, nan, isnan, isinf, set_printoptions, matrix, linspace, ndarray
 
 pd.set_option('display.max_columns', 20)
 set_printoptions(precision=4, suppress=True, linewidth=150)
@@ -245,12 +245,13 @@ class DSGE(object):
         if self.verbose:
             print('Acceptance rate:', 100 * (accepted / nsim), 'percent')
 
-    def eval_chains(self, burnin=0.3, load_chain=None, show_charts=False):
+    def eval_chains(self, burnin=0.3, conf=0.90, load_chain=None, show_charts=False):
         """
         This function evaluates the chains generated in the estimation step and calibrates the model with the posterior
         mode. It also has functionalities to plot the generated chains and posterior distributions.
         @param burnin: int or float. Number of observations on the begging of the chain that are going to be dropped to
                        compute posterior statistics.
+        @param conf: Level of credibility for the credibility intervals inferred from the posteriors.
         @param load_chain: str. Save pathe of the HDF5 file with the chains. Only required if the chains were not loaded
                            in the estimation step.
         @param show_charts: bool. If True, prior-posterior chart is shown. Red line are the theoretical prior densities,
@@ -278,7 +279,7 @@ class DSGE(object):
             self._plot_chains(chains=df_chains, show_charts=show_charts)
             self._plot_prior_posterior(chains=df_chains, show_charts=show_charts)
 
-        self.posterior_table = self._posterior_table(chains=df_chains)
+        self.posterior_table = self._posterior_table(chains=df_chains, conf=conf)
 
         # Calibrate model with the posterior mode
         calib_dict = self.posterior_table['posterior mode'].to_dict()
@@ -620,15 +621,17 @@ class DSGE(object):
         if show_charts:
             plt.show()
 
-    def _posterior_table(self, chains):
-        # TODO make the percentile for the CI a parameter
+    def _posterior_table(self, chains, conf):
+
+        low_conf = (1 - conf) / 2
+        high_conf = (1 + conf) / 2
 
         df = self.prior_info[['distribution', 'mean', 'std']]
         df = df.rename({'distribution': 'prior dist', 'mean': 'prior mean', 'std': 'prior std'}, axis=1)
         df['posterior mode'] = chains.mode().mean()
         df['posterior mean'] = chains.mean()
-        df['posterior 5%'] = chains.quantile(0.05)
-        df['posterior 95%'] = chains.quantile(0.95)
+        df[f'posterior {100 * round(low_conf, 2)}%'] = chains.quantile(low_conf)
+        df[f'posterior {100 * round(high_conf, 2)}%'] = chains.quantile(high_conf)
 
         return df
 
@@ -639,7 +642,11 @@ def gensys(g0, g1, c, psi, pi, div=None, realsmall=0.000001):
     https://dge.repec.org/codes/sims/linre3a/
     """
 
-    # TODO Assert variable types
+    # Assertions
+    all_inputs = [g0, g1, c, psi, pi]
+    assert_cond = all([isinstance(inpt, ndarray) for inpt in all_inputs])
+    assert assert_cond, "Inputs 'g0', 'g1', 'c', 'psi' and 'pi' must all be numpy.ndarray"
+
     unique = False
     eu = [0, 0]
     nunstab = 0
@@ -655,7 +662,7 @@ def gensys(g0, g1, c, psi, pi, div=None, realsmall=0.000001):
 
     a, b, q, z = qz(g0, g1, 'complex')
 
-    # TODO the Matrix class will be deprecated in a future version of numpy. Should be changed to the ndarray.
+    # the numpy.matrix class may be deprecated in a future version of numpy. Should be changed to the ndarray.
     # Scipy's version of 'qz' is different from MATLAB's, Q needs to be hermitian transposed to get same output
     q = array(matrix(q).H)
 
@@ -714,7 +721,6 @@ def gensys(g0, g1, c, psi, pi, div=None, realsmall=0.000001):
         if deta.ndim == 1:
             deta = diag(deta)
 
-    # TODO check this
     try:
         if len(bigev) >= nunstab:
             eu[0] = 1
@@ -734,7 +740,7 @@ def gensys(g0, g1, c, psi, pi, div=None, realsmall=0.000001):
         # ndeta1 = min(n - nunstab, neta)
         ueta1, deta1, veta1 = svd(etawt1)
         deta1 = diag(deta1)
-        veta1 = array(matrix(veta1).H)  # TODO check if transpose, instead of hermitian
+        veta1 = array(matrix(veta1).H)
         md = min(deta1.shape)
         bigev = where(diagonal(deta1[:md, :md]) > realsmall)[0]
         ueta1 = ueta1[:, bigev]

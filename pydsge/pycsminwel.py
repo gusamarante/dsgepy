@@ -1,5 +1,5 @@
 """
-All of the functions in this file were created by Christopher Sims in 1996.
+All the functions in this file were created by Christopher Sims in 1996.
 They are translations to python from the author's original MATLAB files.
 
 The originals can be found in:

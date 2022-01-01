@@ -605,7 +605,7 @@ class DSGE(object):
                 ax.plot(x, y, color='red')
 
             elif dist == 'invgamma':
-                y = (b**a) * invgamma.pdf(x, a) * exp((1 - b) / x)
+                y = (b ** a) * invgamma.pdf(x, a) * exp((1 - b) / x)
                 ax.plot(x, y, color='red')
 
             elif dist == 'uniform':

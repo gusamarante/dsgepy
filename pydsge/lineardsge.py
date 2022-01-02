@@ -6,7 +6,7 @@ Classes and functions for linearized DSGEs.
 import warnings
 import pandas as pd
 from tqdm import tqdm
-from math import ceil
+from math import ceil, floor
 from scipy.linalg import qz
 import matplotlib.pyplot as plt
 from pykalman import KalmanFilter
@@ -41,7 +41,8 @@ class DSGE(object):
     acceptance_rate = None
 
     def __init__(self, endog, endogl, exog, expec, state_equations, obs_equations=None, estimate_params=None,
-                 calib_dict=None, prior_dict=None, obs_data=None, verbose=False, optim_method='csminwel'):
+                 calib_dict=None, prior_dict=None, obs_data=None, verbose=False, optim_method='csminwel',
+                 obs_names=None):
         """
         Model declaration requires passing SymPy symbols as variables and parameters. Some arguments can be left empty
         if you are working with simulations of calibrated models.
@@ -82,6 +83,7 @@ class DSGE(object):
         self.params = estimate_params
         self.state_equations = state_equations
         self.obs_equations = obs_equations
+        self.obs_names = obs_names
         self.prior_dict = prior_dict
         self.data = obs_data
         self.n_state = len(endog)
@@ -308,37 +310,53 @@ class DSGE(object):
 
         # Initialiaze with zeros
         irf_values = zeros((periods, self.n_state, self.n_exog))
+        obs_irf_values = zeros((periods, self.n_obs, self.n_exog))
 
         # Compute the IRFs
         partial = self.impact
         for tt in range(periods):
             irf_values[tt, :, :] = partial
+            obs_irf_values[tt, :, :] = self.obs_offset + self.obs_matrix @ partial
             partial = self.G1 @ partial
 
-        # organize in a MultiIndex DataFrame
+        # organize state variables in a MultiIndex DataFrame
         col_names = [str(var) for var in self.endog]
         idx_names = [str(var) for var in self.exog]
         mindex = pd.MultiIndex.from_product([idx_names, list(range(periods))], names=['exog', 'periods'])
-        df_irf = pd.DataFrame(columns=col_names,
-                              index=mindex)
+        df_irf = pd.DataFrame(columns=col_names, index=mindex)
 
         for count, var in enumerate(idx_names):
             df_irf.loc[var] = irf_values[:, :, count]
+
+        # organize observed variables in a MultiIndex DataFrame
+        if self.obs_names is None:
+            col_names_obs = ['obs ' + str(var + 1).zfill(2) for var in range(self.n_obs)]
+        else:
+            col_names_obs = self.obs_names
+
+        df_irf_obs = pd.DataFrame(columns=col_names_obs, index=mindex)
+
+        for count, var in enumerate(idx_names):
+            df_irf_obs.loc[var] = obs_irf_values[:, :, count]
 
         # Charts
         if show_charts:
             shocks = df_irf.index.get_level_values(0).unique()
 
-            n_cols = ceil(sqrt(df_irf.shape[1]))
-            subplot_shape = (n_cols, n_cols)
+            n_subplots = df_irf.shape[1] + df_irf_obs.shape[1]
+            n_rows = floor(sqrt(n_subplots))
+            n_cols = ceil(n_subplots / n_rows)
+
+            subplot_shape = (n_rows, n_cols)
 
             for ss in shocks:
-                ax = df_irf.loc[ss].plot(title=f'Estimated IRFs: Shock {ss}',
-                                         subplots=True,
-                                         layout=subplot_shape,
-                                         grid=True,
-                                         figsize=(9, 7),
-                                         sharey=True)
+                plot_irfs = pd.concat([df_irf.loc[ss], df_irf_obs.loc[ss]])
+                ax = plot_irfs.plot(title=f'Estimated IRFs: Shock {ss}',
+                                    subplots=True,
+                                    layout=subplot_shape,
+                                    grid=True,
+                                    figsize=(12, 7),
+                                    sharey=False)
                 plt.tight_layout()
                 plt.show()
 

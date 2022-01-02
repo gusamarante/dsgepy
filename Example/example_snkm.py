@@ -49,6 +49,8 @@ obs01 = y
 obs02 = pi
 obs03 = 1/beta - 1 + i
 
+obs_names = ['Output Gap', 'Inflation', 'Interest Rate']
+
 obs_equations = Matrix([obs01, obs02, obs03])
 
 
@@ -71,7 +73,8 @@ calib_dict = {sigma: 1.3,
 
 dsge_simul = DSGE(endog, endogl, exog, expec, equations,
                   calib_dict=calib_dict,
-                  obs_equations=obs_equations)
+                  obs_equations=obs_equations,
+                  obs_names=obs_names)
 
 # IRFs from the theoretical Model
 df_irf = dsge_simul.irf(periods=24, show_charts=True)

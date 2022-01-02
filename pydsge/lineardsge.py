@@ -360,6 +360,9 @@ class DSGE(object):
                 plt.tight_layout()
                 plt.show()
 
+        # Concatenate state and observed variables
+        df_irf = pd.concat([df_irf, df_irf_obs], axis=1)
+
         return df_irf
 
     def _get_jacobians(self, generate_obs):

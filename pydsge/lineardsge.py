@@ -373,6 +373,29 @@ class DSGE(object):
 
         return df_irf
 
+    def state(self, smoothed=True):
+
+        kf = KalmanFilter(self.G1, self.obs_matrix, self.impact @ self.impact.T, None,
+                          self.C_out.reshape(self.n_state), self.obs_offset.reshape(self.n_obs))
+
+        if smoothed:
+            states, states_cov = kf.smooth(self.data)
+        else:
+            states, states_cov = kf.filter(self.data)
+
+        # Orgnize in a dataframe
+        states = pd.DataFrame(data=states,
+                              index=self.data.index,
+                              columns=[str(var) for var in self.endog])
+
+        states_std = pd.DataFrame(index=self.data.index,
+                                  columns=[str(var) for var in self.endog])
+
+        for ii in range(states_cov.shape[0]):
+            states_std.iloc[ii] = diagonal(states_cov[ii]) ** 0.5
+
+        return states, states_std
+
     def _get_jacobians(self, generate_obs):
         # State Equations
         self.Gamma0 = self.state_equations.jacobian(self.endog)

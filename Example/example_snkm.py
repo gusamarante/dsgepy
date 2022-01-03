@@ -120,7 +120,7 @@ dsge = DSGE(endog, endogl, exog, expec, equations,
             obs_names=obs_names,
             verbose=True)
 
-dsge.estimate(nsim=100, ck=0.1, file_path='snkm.h5')
+dsge.estimate(nsim=10, ck=0.1, file_path='snkm.h5')
 
 dsge.eval_chains(burnin=0.1, show_charts=True)
 
@@ -128,3 +128,6 @@ print(dsge.posterior_table)
 
 # IRFs from the estimated Model
 df_irf = dsge.irf(periods=24, show_charts=True)
+
+# Extraxct state variables
+df_states_hat, df_states_se = dsge.state()

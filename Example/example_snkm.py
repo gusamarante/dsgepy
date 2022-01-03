@@ -117,9 +117,10 @@ dsge = DSGE(endog, endogl, exog, expec, equations,
             obs_equations=obs_equations,
             prior_dict=prior_dict,
             obs_data=df_obs,
+            obs_names=obs_names,
             verbose=True)
 
-dsge.estimate(nsim=10, ck=0.2, file_path='snkm.h5')
+dsge.estimate(nsim=100, ck=0.1, file_path='snkm.h5')
 
 dsge.eval_chains(burnin=0.1, show_charts=True)
 

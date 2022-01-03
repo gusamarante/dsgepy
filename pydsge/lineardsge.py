@@ -346,17 +346,25 @@ class DSGE(object):
             n_subplots = df_irf.shape[1] + df_irf_obs.shape[1]
             n_rows = floor(sqrt(n_subplots))
             n_cols = ceil(n_subplots / n_rows)
-
             subplot_shape = (n_rows, n_cols)
 
             for ss in shocks:
-                plot_irfs = pd.concat([df_irf.loc[ss], df_irf_obs.loc[ss]])
-                ax = plot_irfs.plot(title=f'Estimated IRFs: Shock {ss}',
+                plot_irfs = pd.concat([df_irf.loc[ss], df_irf_obs.loc[ss]], axis=1)
+                ax = plot_irfs.plot(title=f'Impulse Response Functions: Shock {ss}',
                                     subplots=True,
                                     layout=subplot_shape,
+                                    legend=None,
                                     grid=True,
                                     figsize=(12, 7),
                                     sharey=False)
+
+                zero_irf = list(plot_irfs.columns[(plot_irfs.abs() < 1e-10).all()])
+
+                for axis, subptitle in zip(ax.ravel(), list(plot_irfs.columns)):
+                    axis.set_title(subptitle)
+                    if subptitle in zero_irf:
+                        axis.set_ylim((-1, 1))
+
                 plt.tight_layout()
                 plt.show()
 

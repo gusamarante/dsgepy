@@ -77,10 +77,10 @@ dsge_simul = DSGE(endog, endogl, exog, expec, equations,
                   obs_names=obs_names)
 
 # IRFs from the theoretical Model
-df_irf = dsge_simul.irf(periods=24, show_charts=True)
+# dsge_simul.irf(periods=24, show_charts=True)
 
 # Check existance and uniqueness
-print(dsge_simul.eu)
+# print(dsge_simul.eu)
 
 # Simulate observations
 df_obs, df_states = dsge_simul.simulate(n_obs=200, random_seed=1)
@@ -88,8 +88,8 @@ df_obs, df_states = dsge_simul.simulate(n_obs=200, random_seed=1)
 df_states = df_states.tail(100).reset_index(drop=True)
 df_obs = df_obs.tail(100).reset_index(drop=True)
 
-df_obs.plot()
-plt.show()
+# df_obs.plot()
+# plt.show()
 
 
 # =============================
@@ -122,12 +122,16 @@ dsge = DSGE(endog, endogl, exog, expec, equations,
 
 dsge.estimate(nsim=10, ck=0.1, file_path='snkm.h5')
 
-dsge.eval_chains(burnin=0.1, show_charts=True)
+# dsge.eval_chains(burnin=0.1, show_charts=True)
+dsge.eval_chains(burnin=0.1, show_charts=False)
 
-print(dsge.posterior_table)
+# print(dsge.posterior_table)
 
 # IRFs from the estimated Model
-df_irf = dsge.irf(periods=24, show_charts=True)
+# dsge.irf(periods=24, show_charts=True)
 
-# Extraxct state variables
-df_states_hat, df_states_se = dsge.state()
+# Extraxct state variables  # TODO compare with the originals
+# df_states_hat, df_states_se = dsge.states()
+
+# Historical Decomposition
+dsge._get_residuals()

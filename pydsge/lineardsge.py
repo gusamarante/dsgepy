@@ -34,6 +34,7 @@ class DSGE(object):
 
     optim_methods = ['csminwel', 'basinhopping', 'bfgs']
 
+    resid = None
     chains = None
     prior_info = None
     has_solution = False
@@ -294,6 +295,8 @@ class DSGE(object):
 
         self.has_solution = True
 
+        self.resid = self._get_residuals()
+
     def irf(self, periods=12, show_charts=False):
         """
         Generates and plot impulse-response functions (IRFs).
@@ -373,7 +376,7 @@ class DSGE(object):
 
         return df_irf
 
-    def state(self, smoothed=True):
+    def states(self, smoothed=True):
 
         kf = KalmanFilter(self.G1, self.obs_matrix, self.impact @ self.impact.T, None,
                           self.C_out.reshape(self.n_state), self.obs_offset.reshape(self.n_obs))
@@ -395,6 +398,29 @@ class DSGE(object):
             states_std.iloc[ii] = diagonal(states_cov[ii]) ** 0.5
 
         return states, states_std
+
+    def _get_residuals(self):
+
+        c = self.obs_offset
+        a = self.obs_matrix
+        p0 = self.C_out
+        p1 = self.G1
+        b = self.impact
+        ss = inv(eye(self.n_state) - p1) @ p0
+
+        df_resid = pd.DataFrame(columns=[str(var) for var in self.exog],
+                                index=self.data.index)
+
+        # Compute residuals
+        acum_schoks = zeros((self.n_state, 1))
+        for tt in self.data.index:
+            y = self.data.loc[tt].values.reshape((self.n_obs, -1))
+            eps = inv(a @ b) @ (y - c - a @ ss) - a @ acum_schoks
+            df_resid.loc[tt] = eps.flatten()
+            acum_schoks = p1 @ (acum_schoks + b @ eps)
+
+        df_resid = df_resid.astype(float)
+        return df_resid
 
     def _get_jacobians(self, generate_obs):
         # State Equations

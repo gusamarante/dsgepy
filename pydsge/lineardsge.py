@@ -20,8 +20,8 @@ from scipy.stats import beta, gamma, invgamma, norm, uniform
 from numpy import diagonal, vstack, array, eye, where, diag, sqrt, hstack, zeros, \
     arange, exp, log, inf, nan, isnan, isinf, set_printoptions, matrix, linspace, ndarray
 
-pd.set_option('display.max_columns', 20)
-set_printoptions(precision=4, suppress=True, linewidth=150)
+pd.set_option('display.max_columns', 20)  # TODO this should not be here
+set_printoptions(precision=4, suppress=True, linewidth=150)  # TODO this should not be here
 warnings.filterwarnings('ignore', category=RuntimeWarning)
 warnings.filterwarnings('ignore', category=PerformanceWarning)
 warnings.filterwarnings('ignore', category=pd.errors.PerformanceWarning)
@@ -72,6 +72,9 @@ class DSGE(object):
                          'obs_equations' declarations.
         @param verbose: <not implemented yet>
         """
+        # TODO document residuals require that n_obs == n_exog
+        # TODO document all of the attributes
+        # TODO full review of documentation
 
         assert optim_method in self.optim_methods, f"optimization method '{optim_method}' not implemented"
 

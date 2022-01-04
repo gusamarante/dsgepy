@@ -12,9 +12,9 @@ import matplotlib.pyplot as plt
 from pykalman import KalmanFilter
 from sympy import simplify, Matrix
 from tables import PerformanceWarning
-from numpy.linalg import svd, inv, eig
 from pydsge.pycsminwel import csminwel
 from scipy.optimize import minimize, basinhopping
+from numpy.linalg import svd, inv, eig, matrix_power
 from numpy.random import multivariate_normal, rand, seed
 from scipy.stats import beta, gamma, invgamma, norm, uniform
 from numpy import diagonal, vstack, array, eye, where, diag, sqrt, hstack, zeros, \
@@ -401,6 +401,22 @@ class DSGE(object):
             states_std.iloc[ii] = diagonal(states_cov[ii]) ** 0.5
 
         return states, states_std
+
+    def hist_decomp(self, smoothed=True):
+        states, _ = self.states(smoothed=smoothed)
+        x0 = states.iloc[0].values.reshape((-1, 1))
+        p0 = self.C_out
+        p1 = self.G1
+        b = self.impact
+        eps = self.resid
+
+        matrix_sum = zeros((self.n_state, self.n_state))
+
+        for tt in eps.index:
+            pass
+            # save stuff
+
+        a = 1
 
     def _get_residuals(self):
 

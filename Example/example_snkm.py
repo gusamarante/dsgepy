@@ -134,6 +134,7 @@ dsge.eval_chains(burnin=0.1, show_charts=False)
 # df_states_hat, df_states_se = dsge.states()
 
 # TODO Analyze residuals VS the hypothesis
-dsge._get_residuals()
+# dsge._get_residuals()
 
 # Historical Decomposition
+df_hd = dsge.hist_decomp()

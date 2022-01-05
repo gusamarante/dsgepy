@@ -137,7 +137,10 @@ class DSGE(object):
         simul_data = kf.sample(n_obs)
 
         state_names = [str(s) for s in list(self.endog)]
-        obs_names = [f'obs {i+1}' for i in range(self.obs_matrix.shape[0])]
+        if self.obs_names is None:
+            obs_names = [f'obs {i+1}' for i in range(self.obs_matrix.shape[0])]
+        else:
+            obs_names = self.obs_names
 
         df_obs = pd.DataFrame(data=simul_data[1], columns=obs_names)
         df_states = pd.DataFrame(data=simul_data[0], columns=state_names)
@@ -403,20 +406,48 @@ class DSGE(object):
         return states, states_std
 
     def hist_decomp(self, smoothed=True):
+        # TODO documentation
         states, _ = self.states(smoothed=smoothed)
         x0 = states.iloc[0].values.reshape((-1, 1))
+        a = self.obs_matrix
         p0 = self.C_out
         p1 = self.G1
         b = self.impact
         eps = self.resid
 
-        matrix_sum = zeros((self.n_state, self.n_state))
+        # organize state variables in a MultiIndex DataFrame
+        if self.obs_names is None:
+            idx_names = ['obs ' + str(var + 1).zfill(2) for var in range(self.n_obs)]
+        else:
+            idx_names = self.obs_names
 
-        for tt in eps.index:
-            pass
-            # save stuff
+        col_names = [str(var) for var in self.exog]
+        mindex = pd.MultiIndex.from_product([idx_names, eps.index], names=['obs', 'date'])
+        df_hd = pd.DataFrame(columns=col_names, index=mindex)
 
-        a = 1
+        # Compute historical decomposition
+        for count, tt in tqdm(enumerate(eps.index), 'Computing historical decomposition', disable=not self.verbose):
+
+            matrix_sum = zeros((self.n_state, self.n_exog))
+
+            for k in range(count + 1):
+                matrix_sum += eps.iloc[k].values * (matrix_power(p1, count - k) @ b)
+
+            df_hd[df_hd.index.get_level_values(1) == tt] = a @ matrix_sum
+
+        # compute the contributions of steady states and initial conditions
+        extra_contributions = []
+        for var in self.data.columns:
+            extra = self.data[var] - df_hd.loc[var].sum(axis=1)
+            extra = extra.rename('Steady State and Initial Conditions')
+            extra.index = pd.MultiIndex.from_tuples([(var, i) for i in extra.index])
+            extra_contributions.append(extra)
+
+        # Organize the data
+        df_extras = pd.concat(extra_contributions, axis=0)
+        df_hd = pd.concat([df_extras, df_hd], axis=1)
+
+        return df_hd
 
     def _get_residuals(self):
 
@@ -434,7 +465,7 @@ class DSGE(object):
         acum_schoks = zeros((self.n_state, 1))
         for tt in self.data.index:
             y = self.data.loc[tt].values.reshape((self.n_obs, -1))
-            eps = inv(a @ b) @ (y - c - a @ ss) - a @ acum_schoks
+            eps = inv(a @ b) @ ((y - c - a @ ss) - a @ acum_schoks)
             df_resid.loc[tt] = eps.flatten()
             acum_schoks = p1 @ (acum_schoks + b @ eps)
 

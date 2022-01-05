@@ -138,3 +138,5 @@ dsge.eval_chains(burnin=0.1, show_charts=False)
 
 # Historical Decomposition
 df_hd = dsge.hist_decomp()
+
+a = 1

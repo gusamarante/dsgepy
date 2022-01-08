@@ -405,7 +405,7 @@ class DSGE(object):
 
         return states, states_std
 
-    def hist_decomp(self, smoothed=True):
+    def hist_decomp(self, smoothed=True, show_charts=False):
         # TODO documentation
         states, _ = self.states(smoothed=smoothed)
         x0 = states.iloc[0].values.reshape((-1, 1))
@@ -446,6 +446,10 @@ class DSGE(object):
         # Organize the data
         df_extras = pd.concat(extra_contributions, axis=0)
         df_hd = pd.concat([df_extras, df_hd], axis=1)
+
+        if show_charts:
+            # TODO Historical decomp charts
+            pass
 
         return df_hd
 

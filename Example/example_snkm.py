@@ -137,7 +137,4 @@ dsge.eval_chains(burnin=0.1, show_charts=False)
 # dsge._get_residuals()
 
 # Historical Decomposition
-df_hd = dsge.hist_decomp()
-df_hd.loc['Inflation'].plot(kind='bar', stacked=True, width=1)
-df_obs['Inflation'].plot(color='black')
-plt.show()
+df_hd = dsge.hist_decomp(show_charts=True)

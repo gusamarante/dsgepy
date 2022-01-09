@@ -75,6 +75,7 @@ class DSGE(object):
         # TODO document residuals require that n_obs == n_exog
         # TODO document all of the attributes
         # TODO full review of documentation
+        # TODO add functionality to save the chart to a given path
 
         assert optim_method in self.optim_methods, f"optimization method '{optim_method}' not implemented"
 
@@ -448,8 +449,7 @@ class DSGE(object):
         df_hd = pd.concat([df_extras, df_hd], axis=1)
 
         if show_charts:
-            # TODO Historical decomp charts
-            pass
+            self._plot_historical_decomposition(df_hd, show_charts=show_charts)
 
         return df_hd
 
@@ -766,6 +766,28 @@ class DSGE(object):
         df[f'posterior {100 * round(high_conf, 3)}%'] = chains.quantile(high_conf)
 
         return df
+
+    def _plot_historical_decomposition(self, df_hd, show_charts=False):
+
+        for var in df_hd.index.get_level_values(0).unique():
+
+            fig = plt.figure(figsize=(7 * 1.61, 7))
+            ax = fig.gca()
+
+            ax = df_hd.loc[var].plot(kind='bar', stacked=True, width=1, ax=ax, legend='best',
+                                     title=var)
+            ax.plot(self.data[var], color='black')
+
+            ax.grid(axis='y')
+            y_min, y_max = ax.get_ylim()
+
+            if y_min <= 0 <= y_max:
+                ax.axhline(y=0, color='black', linewidth=0.5)
+
+            plt.tight_layout()
+
+            if show_charts:
+                plt.show()
 
 
 def gensys(g0, g1, c, psi, pi, div=None, realsmall=0.000001):

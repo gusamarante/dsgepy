@@ -41,7 +41,7 @@ class DSGE(object):
     posterior_table = None
     acceptance_rate = None
 
-    def __init__(self, endog, endogl, exog, expec, state_equations, obs_equations=None, estimate_params=None,
+    def __init__(self, endog, endogl, exog, expec=None, state_equations=None, obs_equations=None, estimate_params=None,
                  calib_dict=None, prior_dict=None, obs_data=None, verbose=False, optim_method='csminwel',
                  obs_names=None):
         """
@@ -113,9 +113,11 @@ class DSGE(object):
 
             self.has_solution = True
         else:
-            # Otherwise, calibrate only the required parameters
-            self.Gamma0, self.Gamma1, self.Psi, self.Pi, self.C_in, self.obs_matrix, self.obs_offset = \
-                self._eval_matrix(calib_dict, to_array=False)
+            # Otherwise, calibrate only the required parameters, if calibration is requested
+            if calib_dict is not None:
+                self.Gamma0, self.Gamma1, self.Psi, self.Pi, self.C_in, self.obs_matrix, self.obs_offset = \
+                    self._eval_matrix(calib_dict, to_array=False)
+
             self.prior_info = self._get_prior_info()
 
     def simulate(self, n_obs=100, random_seed=None):
@@ -302,7 +304,10 @@ class DSGE(object):
 
         self.has_solution = True
 
-        self.resid = self._get_residuals()
+        if self.n_obs == self.n_exog:
+            self.resid = self._get_residuals()
+        else:
+            self.resid = None
 
     def irf(self, periods=12, show_charts=False):
         """

@@ -12,7 +12,6 @@ endog = Matrix([y, pi, i, a, v, exp_y, exp_pi])
 
 # endogenous variables at t - 1
 yl, pil, il, al, vl, exp_yl, exp_pil = symbols('yl, pil, il, al, vl, exp_yl, exp_pil')
-
 endogl = Matrix([yl, pil, il, al, vl, exp_yl, exp_pil])
 
 # exogenous shocks

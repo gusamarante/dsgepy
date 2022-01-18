@@ -21,8 +21,9 @@ df = fred.fetch(series_id=series_dict)
 df_obs = pd.DataFrame()
 df_obs['CPI'] = df['CPI'].dropna().resample('Q').last().pct_change(1) * 4
 df_obs['FFR'] = df['Fed Funds Rate'].resample('Q').mean()
-df_obs['logGDP'] = np.log(df['GDP'].resample('Q').last().dropna())
-df_obs['outputgap'], _ = hpfilter(df_obs['logGDP'].dropna(), 1600)
+df_obs['outputgap'], _ = hpfilter(df['GDP'].resample('Q').last().dropna(), 1600)
+
+df_obs = df_obs.dropna()
 
 # ================================
 # ===== MODEL ESPECIFICATION =====
@@ -99,16 +100,16 @@ dsge = DSGE(endog, endogl, exog, expec, equations,
             obs_names=obs_names,
             verbose=True)
 
-dsge.estimate(nsim=100, ck=0.1, file_path='snkm.h5')
+dsge.estimate(nsim=1000, ck=0.1, file_path='example_us.h5')
 dsge.eval_chains(burnin=0.1, show_charts=True)
 
-print(dsge.posterior_table)
+# print(dsge.posterior_table)
 
 # IRFs from the estimated Model
-dsge.irf(periods=24, show_charts=True)
+# dsge.irf(periods=24, show_charts=True)
 
 # Extraxct state variables
-df_states_hat, df_states_se = dsge.states()
+# df_states_hat, df_states_se = dsge.states()
 
 # Historical Decomposition
-df_hd = dsge.hist_decomp(show_charts=True)
+# df_hd = dsge.hist_decomp(show_charts=True)

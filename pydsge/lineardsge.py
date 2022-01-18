@@ -14,7 +14,7 @@ from sympy import simplify, Matrix
 from tables import PerformanceWarning
 from pydsge.pycsminwel import csminwel
 from scipy.optimize import minimize, basinhopping
-from numpy.linalg import svd, inv, eig, matrix_power
+from numpy.linalg import svd, inv, eig, matrix_power, LinAlgError
 from numpy.random import multivariate_normal, rand, seed
 from scipy.stats import beta, gamma, invgamma, norm, uniform
 from numpy import diagonal, vstack, array, eye, where, diag, sqrt, hstack, zeros, \
@@ -563,7 +563,10 @@ class DSGE(object):
         if eu[0] == 1 and eu[1] == 1:
             kf = KalmanFilter(G1, obs_matrix, impact @ impact.T, None, C_out.reshape(self.n_state),
                               obs_offset.reshape(self.n_obs))
-            L = kf.loglikelihood(self.data)
+            try:
+                L = kf.loglikelihood(self.data)
+            except (LinAlgError, ValueError):
+                L = - inf
         else:
             L = - inf
 

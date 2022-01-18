@@ -715,7 +715,7 @@ class DSGE(object):
             plt.show()
 
     def _plot_prior_posterior(self, chains, show_charts):
-        n_bins = int(sqrt(chains.shape[0]))
+        n_bins = int(sqrt(chains.shape[0]))  # TODO use the same logic as the IRF charts
         n_cols = int(self.n_param ** 0.5)
         n_rows = n_cols + 1 if self.n_param > n_cols ** 2 else n_cols
         subplot_shape = (n_rows, n_cols)

@@ -125,19 +125,15 @@ dsge = DSGE(endog, endogl, exog, expec, equations,
 
 dsge.estimate(nsim=10, ck=0.1, file_path='snkm.h5')
 
-# dsge.eval_chains(burnin=0.1, show_charts=True)
-dsge.eval_chains(burnin=0.1, show_charts=False)
+dsge.eval_chains(burnin=0.1, show_charts=True)
 
-# print(dsge.posterior_table)
+print(dsge.posterior_table)
 
 # IRFs from the estimated Model
-# dsge.irf(periods=24, show_charts=True)
+dsge.irf(periods=24, show_charts=True)
 
 # Extraxct state variables  # TODO compare with the originals
-# df_states_hat, df_states_se = dsge.states()
-
-# TODO Analyze residuals VS the hypothesis
-# dsge._get_residuals()
+df_states_hat, df_states_se = dsge.states()
 
 # Historical Decomposition
 df_hd = dsge.hist_decomp(show_charts=True)

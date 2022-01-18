@@ -70,7 +70,11 @@ calib_dict = {sigma: 1.3,
               sigma_v: 0.3,
               sigma_pi: 0.8}
 
-dsge_simul = DSGE(endog, endogl, exog, expec, equations,
+dsge_simul = DSGE(endog=endog,
+                  endogl=endogl,
+                  exog=exog,
+                  expec=expec,
+                  state_equations=equations,
                   calib_dict=calib_dict,
                   obs_equations=obs_equations,
                   obs_names=obs_names)

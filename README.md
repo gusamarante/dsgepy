@@ -50,7 +50,7 @@ The models are estimated using Bayesian methdos, specifically, by simulating the
 sampling. Simulations are typically long, so there is a functionality that allows you to stop a simulation and continue 
 it later from where it stoped.
 
-# Analysys
+# Analysis
 There are functionalities for computing Impulse-Response funcions for both state variables and observed variables. 
 Historical decomposition is also available, but only when the number of exogenous shocks matches the number of 
 observed variables.

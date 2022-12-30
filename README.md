@@ -1,22 +1,23 @@
-# pydsge
+# dsgepy
 This is a Python library to calibrate, estimate and analyze linearized DSGE models. The interface is inpired by the 
 dynare interface which allows for symbolic declarations of the variables and equations. The implemented bayesian 
 estimation method uses markov chain monte carlo (MCMC) to simulate the posterior distributions of the parameters. This 
-library is an effort to bring the DSGE toolset into the open-source world in a fully python implementation, which allows 
-to fully embrace the advantages of the programming language when working with DSGEs.
+library is an effort to bring the DSGE toolset into the open-source world in a full python implementation, which allows 
+to embrace the advantages of this programming language when working with DSGEs.
 
 ---
 # Installation
 You can install this development version using:
 ```
-pip install git+https://github.com/gusamarante/pydsge.git#egg=pydsge
+pip install dsgepy
 ```
 
 ### Kalman Filter
 Computing the likelihood of models involve using the kalman filter. `pykalman` is available for python, but some 
-adjustments to the original library were needed to use with this library. So in order for `pydsge` to work you need 
-the corrected version of `pykalman`, available [here](https://github.com/gusamarante/pykalman). The corrections here 
-correct the way `pykalman` handles masked numpy arrays and deals with ill-estimated covariance matrices.  
+adjustments to the original library are needed to use with this library. So **in order for `dsgepy` to work you need 
+the corrected version of `pykalman`, available [here](https://github.com/gusamarante/pykalman). Make sure to clone this 
+version and add it to the interpreter befor using `dsgepy`**. The corrections here correct the way `pykalman` handles 
+masked numpy arrays and deals with ill-estimated covariance matrices. 
 
 ---
 # Example
@@ -58,7 +59,7 @@ observed variables.
 ---
 # Drawbacks
 Since there is symbolic declaration of variables and equations, methdos involving them are slow, so the MCMC methods 
-typically take a long time to run. Although there is a lot room for improvement for the efficiency of these estimation
+typically take a long time to run. Although there is room for improvement for the efficiency of these estimation
 algorithms.
 
 ---
@@ -71,4 +72,4 @@ repository.
 ---
 # More Information and Help
 If you need more information and help, specially about contributing, you can contact Gustavo Amarante on 
-developer@pydsge.com
+developer@dsgepy.com

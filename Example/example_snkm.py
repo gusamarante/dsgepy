@@ -1,4 +1,4 @@
-from pydsge import DSGE
+from dsgepy import DSGE
 import matplotlib.pyplot as plt
 from sympy import symbols, Matrix
 

@@ -456,16 +456,6 @@ def bfgsi(h0, dg, dx, verbose=False):
     :return: updated inverse hessian matrix
     """
 
-    # the code below is only needed if the input x is a matrix (in matlab)
-    # if size(dg, 2) > 1
-    #     dg = dg
-    #     ';
-    # end
-    # if size(dx, 2) > 1
-    #     dx = dx
-    #     ';
-    # end
-
     dx = dx.reshape(-1, 1)
     dg = dg.reshape(-1, 1)
 

@@ -4,12 +4,12 @@ This example is not finished
 
 import numpy as np
 import pandas as pd
-from pydsge import DSGE
+from dsgepy import DSGE
 import matplotlib.pyplot as plt
 from sympy import Matrix, symbols
 from statsmodels.tsa.filters.hp_filter import hpfilter
 
-from pydsge import FRED
+from dsgepy import FRED
 
 fred = FRED()
 

@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 from pykalman import KalmanFilter
 from sympy import simplify, Matrix
 # from tables import PerformanceWarning
-from pydsge.pycsminwel import csminwel
+from dsgepy.pycsminwel import csminwel
 from scipy.optimize import minimize, basinhopping
 from numpy.random import multivariate_normal, rand, seed
 from scipy.stats import beta, gamma, invgamma, norm, uniform

@@ -11,10 +11,10 @@ VERSION = '0.0.1'
 DESCRIPTION = 'Solve and estimate linearized DSGE models'
 
 # Setting up
-setup(name="pydsge",
+setup(name="dsgepy",
       version=VERSION,
       author="Gustavo Amarante",
-      author_email="developer@pydsge.com",
+      author_email="developer@dsgepy.com",
       description=DESCRIPTION,
       long_description_content_type="text/markdown",
       long_description=long_description,
@@ -23,5 +23,6 @@ setup(name="pydsge",
                         'scipy',
                         'tqdm',
                         'sympy',
-                        'numpy'],
+                        'numpy',
+                        'matplotlib'],
       keywords=['dsge', 'macroeconomics'])

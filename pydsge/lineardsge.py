@@ -3,28 +3,28 @@ Author: Gustavo Amarante
 Classes and functions for linearized DSGEs.
 """
 
-import warnings
+# import warnings
 import pandas as pd
 from tqdm import tqdm
-from math import ceil, floor
 from scipy.linalg import qz
+from math import ceil, floor
 import matplotlib.pyplot as plt
 from pykalman import KalmanFilter
 from sympy import simplify, Matrix
-from tables import PerformanceWarning
+# from tables import PerformanceWarning
 from pydsge.pycsminwel import csminwel
 from scipy.optimize import minimize, basinhopping
-from numpy.linalg import svd, inv, eig, matrix_power, LinAlgError
 from numpy.random import multivariate_normal, rand, seed
 from scipy.stats import beta, gamma, invgamma, norm, uniform
+from numpy.linalg import svd, inv, eig, matrix_power, LinAlgError
 from numpy import diagonal, vstack, array, eye, where, diag, sqrt, hstack, zeros, \
     arange, exp, log, inf, nan, isnan, isinf, set_printoptions, matrix, linspace, ndarray
 
-pd.set_option('display.max_columns', 20)  # TODO this should not be here
-set_printoptions(precision=4, suppress=True, linewidth=150)  # TODO this should not be here
-warnings.filterwarnings('ignore', category=RuntimeWarning)
-warnings.filterwarnings('ignore', category=PerformanceWarning)
-warnings.filterwarnings('ignore', category=pd.errors.PerformanceWarning)
+# pd.set_option('display.max_columns', 20)
+# set_printoptions(precision=4, suppress=True, linewidth=150)
+# warnings.filterwarnings('ignore', category=RuntimeWarning)
+# warnings.filterwarnings('ignore', category=PerformanceWarning)
+# warnings.filterwarnings('ignore', category=pd.errors.PerformanceWarning)
 
 
 class DSGE(object):

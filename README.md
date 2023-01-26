@@ -1,9 +1,18 @@
 # dsgepy
-This is a Python library to calibrate, estimate and analyze linearized DSGE models. The interface is inpired by the 
-dynare interface which allows for symbolic declarations of the variables and equations. The implemented bayesian 
-estimation method uses markov chain monte carlo (MCMC) to simulate the posterior distributions of the parameters. This 
-library is an effort to bring the DSGE toolset into the open-source world in a full python implementation, which allows 
-to embrace the advantages of this programming language when working with DSGEs.
+This is a Python library to specify, calibrate, solve, simulate, estimate and 
+analyze linearized DSGE models. The specification interface is inpired by 
+dynare, which allows for symbolic declarations of parameters, variables and 
+equations. Once a model is calbrated or estimated, it is solved using Sims 
+(2002) methodology. 
+Simulated trajectories can be generated from a calibrated model. Estimation 
+uses bayesian methods, specifically markov chain monte carlo (MCMC), to 
+simulate the posterior distributions of the parameters. Analysis tools include 
+impulse-response functions, historical decompostion and extraction of latent 
+variables.
+
+This library is an effort to bring the DSGE toolset into the open-source world 
+in a full python implementation, which allows to embrace the advantages of this 
+programming language when working with DSGEs.
 
 ---
 # Installation
@@ -16,14 +25,14 @@ pip install dsgepy
 Computing the likelihood of models involve using the kalman filter. `pykalman` is available for python, but some 
 adjustments to the original library are needed to use with this library. So **in order for `dsgepy` to work you need 
 the corrected version of `pykalman`, available [here](https://github.com/gusamarante/pykalman). Make sure to clone this 
-version and add it to the interpreter befor using `dsgepy`**. The corrections here correct the way `pykalman` handles 
-masked numpy arrays and deals with ill-estimated covariance matrices. 
+version and add it to your interpreter before using `dsgepy`**. The corrections here deal with the way `pykalman` handles 
+masked numpy arrays and handles with ill-estimated covariance matrices.
 
 ---
 # Example
 A full example on how to use this library with a small New Keynesian model is available in 
 [this Jupyter notebook](https://github.com/gusamarante/pydsge/blob/master/Example/example_snkm.ipynb). The model used 
-in the example is descibred briefly by the following equations: 
+in the example is descibred briefly by the following equations:
 
 <img src="http://latex.codecogs.com/gif.latex?\tilde{y}_{t}=E_{t}\left(\tilde{y}_{t+1}\right)-\frac{1}{\sigma}\left[\hat{i}_{t}-E_{t}\left(\pi_{t+1}\right)\right]+\psi_{ya}^{n}\left(\rho_{a}-1\right)a_{t}" />
 
@@ -38,8 +47,8 @@ in the example is descibred briefly by the following equations:
 
 # Model Especification
 For now, the model equations have to be linearized around its steady-state. 
-Soon, there will be a functionality that allows for non-linearized declaration 
-of the equilibrium conditions.
+Soon, there will be a functionality that allows for declaration with 
+non-linearized equilibrium conditions.
 
 # Model Solution
 The solution method used is based on the implementation of Christopher A. Sims' `gensys` function. You can find the 
@@ -48,7 +57,7 @@ method is [this one](https://dge.repec.org/codes/sims/linre3a/LINRE3A.pdf).
 
 # Model Estimation
 The models are estimated using Bayesian methdos, specifically, by simulating the posterior distribution using MCMC 
-sampling. Simulations are typically long, so there is a functionality that allows you to stop a simulation and continue 
+sampling. This process is slow, so there is a functionality that allows you to stop a simulation and continue 
 it later from where it stoped.
 
 # Analysis
@@ -58,9 +67,11 @@ observed variables.
 
 ---
 # Drawbacks
-Since there is symbolic declaration of variables and equations, methdos involving them are slow, so the MCMC methods 
-typically take a long time to run. Although there is room for improvement for the efficiency of these estimation
-algorithms.
+Since there is symbolic declaration of variables and equations, methdos 
+involving them are slow. Also, MCMC methods for macroeconomic models require 
+many iterations to achieve convergence. Clearly, there is room for improvement 
+on the efficiency of these estimation algorithms. Contributions are welcome.
+Speaking of contributions...
 
 ---
 # Contributing
@@ -71,5 +82,5 @@ repository.
 
 ---
 # More Information and Help
-If you need more information and help, specially about contributing, you can contact Gustavo Amarante on 
-developer@dsgepy.com
+If you need more information and help, specially about contributing, you can 
+contact Gustavo Amarante on developer@dsgepy.com

@@ -356,32 +356,60 @@ class DSGE(object):
 
         # Charts
         if show_charts:
-            shocks = df_irf.index.get_level_values(0).unique()
+            if self.obs_equations is None:  # TODO I need a cleaner way to do this
+                shocks = df_irf.index.get_level_values(0).unique()
 
-            n_subplots = df_irf.shape[1] + df_irf_obs.shape[1]
-            n_rows = floor(sqrt(n_subplots))
-            n_cols = ceil(n_subplots / n_rows)
-            subplot_shape = (n_rows, n_cols)
+                n_subplots = df_irf.shape[1]
+                n_rows = floor(sqrt(n_subplots))
+                n_cols = ceil(n_subplots / n_rows)
+                subplot_shape = (n_rows, n_cols)
 
-            for ss in shocks:
-                plot_irfs = pd.concat([df_irf.loc[ss], df_irf_obs.loc[ss]], axis=1)
-                ax = plot_irfs.plot(title=f'Impulse Response Functions: Shock {ss}',
-                                    subplots=True,
-                                    layout=subplot_shape,
-                                    legend=None,
-                                    grid=True,
-                                    figsize=(12, 7),
-                                    sharey=False)
+                for ss in shocks:
+                    plot_irfs = pd.concat([df_irf.loc[ss]], axis=1)
+                    ax = plot_irfs.plot(title=f'Impulse Response Functions: Shock {ss}',
+                                        subplots=True,
+                                        layout=subplot_shape,
+                                        legend=None,
+                                        grid=True,
+                                        figsize=(12, 7),
+                                        sharey=False)
 
-                zero_irf = list(plot_irfs.columns[(plot_irfs.abs() < 1e-10).all()])
+                    zero_irf = list(plot_irfs.columns[(plot_irfs.abs() < 1e-10).all()])
 
-                for axis, subptitle in zip(ax.ravel(), list(plot_irfs.columns)):
-                    axis.set_title(subptitle)
-                    if subptitle in zero_irf:
-                        axis.set_ylim((-1, 1))
+                    for axis, subptitle in zip(ax.ravel(), list(plot_irfs.columns)):
+                        axis.set_title(subptitle)
+                        if subptitle in zero_irf:
+                            axis.set_ylim((-1, 1))
 
-                plt.tight_layout()
-                plt.show()
+                    plt.tight_layout()
+                    plt.show()
+            else:
+                shocks = df_irf.index.get_level_values(0).unique()
+
+                n_subplots = df_irf.shape[1] + df_irf_obs.shape[1]
+                n_rows = floor(sqrt(n_subplots))
+                n_cols = ceil(n_subplots / n_rows)
+                subplot_shape = (n_rows, n_cols)
+
+                for ss in shocks:
+                    plot_irfs = pd.concat([df_irf.loc[ss], df_irf_obs.loc[ss]], axis=1)
+                    ax = plot_irfs.plot(title=f'Impulse Response Functions: Shock {ss}',
+                                        subplots=True,
+                                        layout=subplot_shape,
+                                        legend=None,
+                                        grid=True,
+                                        figsize=(12, 7),
+                                        sharey=False)
+
+                    zero_irf = list(plot_irfs.columns[(plot_irfs.abs() < 1e-10).all()])
+
+                    for axis, subptitle in zip(ax.ravel(), list(plot_irfs.columns)):
+                        axis.set_title(subptitle)
+                        if subptitle in zero_irf:
+                            axis.set_ylim((-1, 1))
+
+                    plt.tight_layout()
+                    plt.show()
 
         # Concatenate state and observed variables
         df_irf = pd.concat([df_irf, df_irf_obs], axis=1)

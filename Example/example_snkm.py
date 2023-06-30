@@ -1,5 +1,4 @@
 from dsgepy import DSGE
-import matplotlib.pyplot as plt
 from sympy import symbols, Matrix
 
 
@@ -80,10 +79,10 @@ dsge_simul = DSGE(endog=endog,
                   obs_names=obs_names)
 
 # IRFs from the theoretical Model
-# dsge_simul.irf(periods=24, show_charts=True)
+dsge_simul.irf(periods=24, show_charts=True)
 
 # Check existance and uniqueness
-# print(dsge_simul.eu)
+print(dsge_simul.eu)
 
 # Simulate observations
 df_obs, df_states = dsge_simul.simulate(n_obs=200, random_seed=1)
@@ -123,13 +122,13 @@ dsge = DSGE(endog, endogl, exog, expec, equations,
             obs_names=obs_names,
             verbose=True)
 
-dsge.estimate(nsim=10, ck=0.1, file_path='snkm.h5')
+dsge.estimate(nsim=1000, ck=0.1, file_path='snkm.h5')
 
 dsge.eval_chains(burnin=0.1, show_charts=True)
 
 print(dsge.posterior_table)
 
-# IRFs from the estimated Model
+# IRFs from the estimated Model  # TODO compare with the originals
 dsge.irf(periods=24, show_charts=True)
 
 # Extraxct state variables  # TODO compare with the originals

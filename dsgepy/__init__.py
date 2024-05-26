@@ -1,5 +1,5 @@
-__all__ = ['DSGE', 'gensys', 'csminwel', 'FRED']
+__all__ = ['DSGE', 'gensys', 'csminwel', 'FRED', 'SGS']
 
 from .lineardsge import DSGE, gensys
 from .pycsminwel import csminwel
-from .apifred import FRED
+from .data_api import FRED, SGS

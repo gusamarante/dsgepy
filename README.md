@@ -21,13 +21,6 @@ You can install this development version using:
 pip install dsgepy
 ```
 
-### Kalman Filter
-Computing the likelihood of models involve using the kalman filter. `pykalman` is available for python, but some 
-adjustments to the original library are needed to use with this library. So **in order for `dsgepy` to work you need 
-the corrected version of `pykalman`, available [here](https://github.com/gusamarante/pykalman). Make sure to clone this 
-version and add it to your interpreter before using `dsgepy`**. The corrections here deal with the way `pykalman` handles 
-masked numpy arrays and handles with ill-estimated covariance matrices.
-
 ---
 # Example
 A full example on how to use this library with a small New Keynesian model is available in 

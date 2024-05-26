@@ -9,7 +9,7 @@ from tqdm import tqdm
 from scipy.linalg import qz
 from math import ceil, floor
 import matplotlib.pyplot as plt
-from pykalman import KalmanFilter
+from dsgepy.kalman import KalmanFilter
 from sympy import simplify, Matrix
 # from tables import PerformanceWarning
 from dsgepy.pycsminwel import csminwel

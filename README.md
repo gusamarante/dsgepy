@@ -27,15 +27,15 @@ A full example on how to use this library with a small New Keynesian model is av
 [this Jupyter notebook](https://github.com/gusamarante/pydsge/blob/master/Example/example_snkm.ipynb). The model used 
 in the example is descibred briefly by the following equations:
 
-<img src="http://latex.codecogs.com/gif.latex?\tilde{y}_{t}=E_{t}\left(\tilde{y}_{t+1}\right)-\frac{1}{\sigma}\left[\hat{i}_{t}-E_{t}\left(\pi_{t+1}\right)\right]+\psi_{ya}^{n}\left(\rho_{a}-1\right)a_{t}" />
+$$\tilde{y}_{t}=E_{t}\left(\tilde{y}_{t+1}\right)-\frac{1}{\sigma}\left[\hat{i}_{t}-E_{t}\left(\pi_{t+1}\right)\right]+\psi_{ya}^{n}\left(\rho_{a}-1\right)a_{t}$$
 
-<img src="http://latex.codecogs.com/gif.latex?\pi_{t}=\beta E_{t}\left(\pi_{t+1}\right)+\kappa\tilde{y}_{t}+\sigma_{\pi}\varepsilon_{t}^{\pi}" />
+$$\pi_{t}=\beta E_{t}\left(\pi_{t+1}\right)+\kappa\tilde{y}_{t}+\sigma_{\pi}\varepsilon_{t}^{\pi}$$
 
-<img src="http://latex.codecogs.com/gif.latex?\hat{i}_{t}=\phi_{\pi}\pi_{t}+\phi_{y}\tilde{y}_{t}+v_{t}" />
+$$\hat{i}_{t}=\phi_{\pi}\pi_{t}+\phi_{y}\tilde{y}_{t}+v_{t}$$
 
-<img src="http://latex.codecogs.com/gif.latex?a_{t}=\rho_{a}a_{t-1}+\sigma_{a}\varepsilon_{t}^{a}" />
+$$a_{t}=\rho_{a}a_{t-1}+\sigma_{a}\varepsilon_{t}^{a}$$
 
-<img src="http://latex.codecogs.com/gif.latex?v_{t}=\rho_{v}v_{t-1}+\sigma_{v}\varepsilon_{t}^{v}" />
+$$v_{t}=\rho_{v}v_{t-1}+\sigma_{v}\varepsilon_{t}^{v}$$
 
 
 # Model Especification

@@ -32,7 +32,7 @@ $$
 $$
 
 $$
-\tilde{y}_{t} = E_{t}\(a\)
+\tilde{y}\_{t} = E\_\(a\)
 $$
 
 $$\pi_{t}=\beta E_{t}\left(\pi_{t+1}\right)+\kappa\tilde{y}_{t}+\sigma_{\pi}\varepsilon_{t}^{\pi}$$

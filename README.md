@@ -31,6 +31,10 @@ $$
 \tilde{y}_{t}=E_{t}(\tilde{y}_{t+1}\)-\frac{1}{\sigma}\(\hat{i}_{t}-E_{t}\(\pi_{t+1}\))+\psi_{ya}^{n}\(\rho_{a}-1\)a_{t}
 $$
 
+$$
+\tilde{y}_{t}
+$$
+
 $$\pi_{t}=\beta E_{t}\left(\pi_{t+1}\right)+\kappa\tilde{y}_{t}+\sigma_{\pi}\varepsilon_{t}^{\pi}$$
 
 $$\hat{i}_{t}=\phi_{\pi}\pi_{t}+\phi_{y}\tilde{y}_{t}+v_{t}$$

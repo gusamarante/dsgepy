@@ -27,13 +27,7 @@ A full example on how to use this library with a small New Keynesian model is av
 [this Jupyter notebook](https://github.com/gusamarante/pydsge/blob/master/Example/example_snkm.ipynb). The model used 
 in the example is descibred briefly by the following equations:
 
-$$
-\tilde{y}_{t} = E_{t}(\tilde{y}_{t+1}\)-\frac{1}{\sigma}\(\hat{i}_{t}-E_{t}\(\pi_{t+1}\))+\psi_{ya}^{n}\(\rho_{a}-1\)a_{t}
-$$
-
-$$
-\tilde{y}\_{t} = E\_\(a\)
-$$
+$$\tilde{y}\_{t}=E\_{t}\left(\tilde{y}\_{t+1}\right)-\frac{1}{\sigma}\left[\hat{i}\_{t}-E\_{t}\left(\pi\_{t+1}\right)\right]+\psi\_{ya}^{n}\left(\rho\_{a}-1\right)a\_{t}$$
 
 $$\pi_{t}=\beta E_{t}\left(\pi_{t+1}\right)+\kappa\tilde{y}_{t}+\sigma_{\pi}\varepsilon_{t}^{\pi}$$
 

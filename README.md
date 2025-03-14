@@ -29,11 +29,11 @@ in the example is descibred briefly by the following equations:
 
 $$\tilde{y}\_{t}=E\_{t}\left(\tilde{y}\_{t+1}\right)-\frac{1}{\sigma}\left[\hat{i}\_{t}-E\_{t}\left(\pi\_{t+1}\right)\right]+\psi\_{ya}^{n}\left(\rho\_{a}-1\right)a\_{t}$$
 
-$$\pi_{t}=\beta E_{t}\left(\pi_{t+1}\right)+\kappa\tilde{y}_{t}+\sigma_{\pi}\varepsilon_{t}^{\pi}$$
+$$\pi\_{t}=\beta E\_{t}\left(\pi\_{t+1}\right)+\kappa\tilde{y}\_{t}+\sigma\_{\pi}\varepsilon\_{t}^{\pi}$$
 
-$$\hat{i}_{t}=\phi_{\pi}\pi_{t}+\phi_{y}\tilde{y}_{t}+v_{t}$$
+$$\hat{i}\_{t}=\phi\_{\pi}\pi\_{t}+\phi\_{y}\tilde{y}\_{t}+v\_{t}$$
 
-$$a_{t}=\rho_{a}a_{t-1}+\sigma_{a}\varepsilon_{t}^{a}$$
+$$a_{t}=\rho\_{a}a\_{t-1}+\sigma\_{a}\varepsilon\_{t}^{a}$$
 
 $$v_{t}=\rho_{v}v_{t-1}+\sigma_{v}\varepsilon_{t}^{v}$$
 

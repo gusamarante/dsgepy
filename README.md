@@ -28,11 +28,11 @@ A full example on how to use this library with a small New Keynesian model is av
 in the example is descibred briefly by the following equations:
 
 $$
-\tilde{y}_{t}=E_{t}(\tilde{y}_{t+1}\)-\frac{1}{\sigma}\(\hat{i}_{t}-E_{t}\(\pi_{t+1}\))+\psi_{ya}^{n}\(\rho_{a}-1\)a_{t}
+\tilde{y}_{t} = E_{t}(\tilde{y}_{t+1}\)-\frac{1}{\sigma}\(\hat{i}_{t}-E_{t}\(\pi_{t+1}\))+\psi_{ya}^{n}\(\rho_{a}-1\)a_{t}
 $$
 
 $$
-\tilde{y}_{t}
+\tilde{y}_{t} = E_{t}\(a\)
 $$
 
 $$\pi_{t}=\beta E_{t}\left(\pi_{t+1}\right)+\kappa\tilde{y}_{t}+\sigma_{\pi}\varepsilon_{t}^{\pi}$$

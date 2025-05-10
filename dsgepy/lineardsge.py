@@ -2,8 +2,6 @@
 Author: Gustavo Amarante
 Classes and functions for linearized DSGEs.
 """
-
-# import warnings
 import pandas as pd
 from tqdm import tqdm
 from scipy.linalg import qz
@@ -11,7 +9,6 @@ from math import ceil, floor
 import matplotlib.pyplot as plt
 from dsgepy.kalman import KalmanFilter
 from sympy import simplify, Matrix
-# from tables import PerformanceWarning
 from dsgepy.pycsminwel import csminwel
 from scipy.optimize import minimize, basinhopping
 from numpy.random import multivariate_normal, rand, seed
@@ -19,12 +16,6 @@ from scipy.stats import beta, gamma, invgamma, norm, uniform
 from numpy.linalg import svd, inv, eig, matrix_power, LinAlgError
 from numpy import diagonal, vstack, array, eye, where, diag, sqrt, hstack, zeros, \
     arange, exp, log, inf, nan, isnan, isinf, set_printoptions, matrix, linspace, ndarray
-
-# pd.set_option('display.max_columns', 20)
-# set_printoptions(precision=4, suppress=True, linewidth=150)
-# warnings.filterwarnings('ignore', category=RuntimeWarning)
-# warnings.filterwarnings('ignore', category=PerformanceWarning)
-# warnings.filterwarnings('ignore', category=pd.errors.PerformanceWarning)
 
 
 class DSGE(object):
@@ -963,7 +954,7 @@ def gensys(g0, g1, c, psi, pi, div=None, realsmall=0.000001):
     G0I = inv(G0)
     G1 = G0I @ G1
     usix = arange(n - nunstab, n)
-    C = vstack((tmat @ q @ c, inv(a[usix, :][:, usix] - b[usix, :][:, usix]) @ q2 @ c))
+    C = G0I @ vstack((tmat @ q @ c, inv(a[usix, :][:, usix] - b[usix, :][:, usix]) @ q2 @ c))
     impact = G0I @ vstack((tmat @ q @ psi, zeros((nunstab, psi.shape[1]))))
     fmat = inv(b[usix, :][:, usix]) @ a[usix, :][:, usix]
     fwt = -inv(b[usix, :][:, usix]) @ q2 @ psi

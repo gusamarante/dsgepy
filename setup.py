@@ -15,7 +15,7 @@ setup(
     name="dsgepy",
     version=VERSION,
     author="Gustavo Amarante",
-    author_email="developer@dsgepy.com",
+    author_email="gusamarante@gmail.com",
     description=DESCRIPTION,
     long_description_content_type="text/markdown",
     long_description=long_description,
